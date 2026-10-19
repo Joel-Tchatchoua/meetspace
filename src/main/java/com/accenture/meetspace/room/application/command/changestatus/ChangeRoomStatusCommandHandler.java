@@ -1,6 +1,6 @@
 package com.accenture.meetspace.room.application.command.changestatus;
 
-import com.accenture.meetspace.room.application.port.SiteRepository;
+import com.accenture.meetspace.room.application.port.out.SiteRepository;
 import com.accenture.meetspace.room.domain.exceptions.RoomNotFoundException;
 import com.accenture.meetspace.shared.application.command.CommandHandler;
 

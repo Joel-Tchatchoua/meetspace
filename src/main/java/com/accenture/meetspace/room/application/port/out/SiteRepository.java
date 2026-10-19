@@ -1,4 +1,4 @@
-package com.accenture.meetspace.room.application.port;
+package com.accenture.meetspace.room.application.port.out;
 
 import com.accenture.meetspace.room.domain.entities.Site;
 import com.accenture.meetspace.room.domain.vo.RoomId;
