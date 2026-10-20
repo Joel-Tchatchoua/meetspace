@@ -1,4 +1,4 @@
-package com.accenture.meetspace.room.application.command.changestatus;
+package com.accenture.meetspace.room.application.usecases.changestatus;
 
 import com.accenture.meetspace.room.domain.enums.RoomStatus;
 import com.accenture.meetspace.room.domain.vo.RoomId;
