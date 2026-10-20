@@ -198,6 +198,20 @@ class CreateRoomTest {
 
                 assertThat(site(ebeneId).snapshot().room(command.roomId())).isPresent();
             }
+
+            @Test
+            @DisplayName("reusing the code of a removed room of the site")
+            void reusingTheCodeOfARemovedRoomOfTheSite() {
+                var removed = dodoIn(ebeneId);
+                handler.handle(removed);
+                site(ebeneId).removeRoom(removed.roomId());
+                var command = dodoIn(ebeneId);
+
+                handler.handle(command);
+
+                assertThat(site(ebeneId).snapshot().room(command.roomId()))
+                        .hasValueSatisfying(room -> assertThat(room.code()).isEqualTo("R101"));
+            }
         }
 
         @Nested
@@ -232,18 +246,6 @@ class CreateRoomTest {
                         .isInstanceOf(RoomCodeAlreadyUsedException.class)
                         .hasFieldOrPropertyWithValue("code", "ROOM_CODE_ALREADY_USED");
                 assertThat(site(ebeneId).snapshot().rooms()).hasSize(1);
-            }
-
-            @Test
-            @DisplayName("when the code belongs to a removed room of the site")
-            void whenTheCodeBelongsToARemovedRoomOfTheSite() {
-                var removed = dodoIn(ebeneId);
-                handler.handle(removed);
-                site(ebeneId).removeRoom(removed.roomId());
-
-                assertThatThrownBy(() -> handler.handle(dodoIn(ebeneId)))
-                        .isInstanceOf(RoomCodeAlreadyUsedException.class)
-                        .hasFieldOrPropertyWithValue("code", "ROOM_CODE_ALREADY_USED");
             }
         }
     }

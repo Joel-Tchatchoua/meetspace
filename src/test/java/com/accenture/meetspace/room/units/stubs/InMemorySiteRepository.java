@@ -33,12 +33,16 @@ public final class InMemorySiteRepository implements SiteRepository {
 
     @Override
     public boolean existsByCode(String code) {
-        return sites.values().stream().anyMatch(site -> site.snapshot().code().equals(code));
+        return sites.values().stream()
+                .map(Site::snapshot)
+                .anyMatch(site -> !site.deleted() && site.code().equals(code));
     }
 
     @Override
     public boolean existsByName(String name) {
-        return sites.values().stream().anyMatch(site -> site.snapshot().name().equals(name));
+        return sites.values().stream()
+                .map(Site::snapshot)
+                .anyMatch(site -> !site.deleted() && site.name().equals(name));
     }
 
     public Optional<Site> storedSite(SiteId id) {

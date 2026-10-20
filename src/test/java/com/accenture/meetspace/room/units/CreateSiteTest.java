@@ -147,6 +147,19 @@ class CreateSiteTest {
                 assertThat(site.timeZone()).isEqualTo(ZoneId.of("Indian/Mauritius"));
                 assertThat(site.deleted()).isFalse();
             }
+
+            @Test
+            @DisplayName("reusing the code and name of a deleted site")
+            void reusingTheCodeAndNameOfADeletedSite() {
+                var deletedId = SiteId.generate();
+                handler.handle(ebene(deletedId));
+                siteRepository.findById(deletedId).orElseThrow().delete();
+                var siteId = SiteId.generate();
+
+                handler.handle(ebene(siteId));
+
+                assertThat(siteRepository.findById(siteId)).isPresent();
+            }
         }
 
         @Nested

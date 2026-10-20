@@ -3,7 +3,10 @@ package com.accenture.meetspace.shared.infrastructure.bus;
 import com.accenture.meetspace.shared.application.command.Command;
 import com.accenture.meetspace.shared.application.command.CommandBus;
 import com.accenture.meetspace.shared.application.command.CommandHandlerRegistration;
+import com.accenture.meetspace.shared.application.command.ConcurrentUpdateException;
 import com.accenture.meetspace.shared.application.command.TransactionalException;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionException;
@@ -39,7 +42,9 @@ public class CommandHandlerBus implements CommandBus {
         var registration = registrationFor(command);
         try {
             return transactionTemplate.execute(status -> (R) registration.handle(command));
-        } catch (TransactionException e) {
+        } catch (OptimisticLockingFailureException e) {
+            throw new ConcurrentUpdateException(command, e);
+        } catch (TransactionException | DataAccessException e) {
             throw new TransactionalException(command, e);
         }
     }

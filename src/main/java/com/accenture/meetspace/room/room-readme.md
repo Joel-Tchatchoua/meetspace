@@ -28,22 +28,22 @@ Règles communes à toutes les tables :
 | Attribut | Règle |
 |---|---|
 | Identifiant | `SiteId` (UUID), fourni par l'appelant |
-| Code | Obligatoire, **unique** parmi tous les sites, supprimés compris |
-| Nom | Obligatoire, **unique** parmi tous les sites, supprimés compris |
+| Code | Obligatoire, **unique** parmi les sites non supprimés |
+| Nom | Obligatoire, **unique** parmi les sites non supprimés |
 | Adresse | Obligatoire |
 | Fuseau horaire | Par défaut `Indian/Mauritius` ; doit être un fuseau connu |
-| Salles | Les salles du site, retirées comprises |
+| Salles | Les salles du site ; une fois enregistré, un site ne recharge plus ses salles retirées |
 
 - Suppression **logique** : un flag `deleted` rend le site inutilisable, sans le supprimer physiquement.
 - Un site supprimé est introuvable : le modifier, le supprimer à nouveau ou y ajouter une salle renvoie `SITE_NOT_FOUND`.
-- Le code et le nom d'un site supprimé restent **réservés**.
+- Le code et le nom d'un site supprimé redeviennent **libres** : un nouveau site peut les reprendre.
 - Un site qui a encore des salles non retirées **ne peut pas être supprimé** ; c'est `Site.delete()` qui l'interdit.
 
 Comportements de `Site` :
 
 | Méthode | Règle |
 |---|---|
-| `addRoom` | Le code doit être libre dans le site, salles retirées comprises |
+| `addRoom` | Le code doit être libre parmi les salles non retirées du site |
 | `changeRoomDetails` | La salle doit exister et ne pas être retirée ; un nouveau code doit être libre dans le site |
 | `activateRoom`, `putRoomUnderMaintenance`, `closeRoom` | La salle doit exister et ne pas être retirée |
 | `removeRoom` | La salle doit exister et ne pas être retirée ; elle est marquée comme retirée |
@@ -56,7 +56,7 @@ Une salle appartient à un seul site. Seul `Site` peut la créer ou la modifier 
 | Attribut | Règle |
 |---|---|
 | Identifiant | `RoomId` (UUID), fourni par l'appelant |
-| Code | Obligatoire, **unique au sein de son site**, salles retirées comprises |
+| Code | Obligatoire, **unique parmi les salles non retirées de son site** |
 | Nom | Obligatoire |
 | Étage | Obligatoire, peut être négatif |
 | Capacité | Value object `Capacity`, entre **1 et 200** personnes |
@@ -66,7 +66,7 @@ Une salle appartient à un seul site. Seul `Site` peut la créer ou la modifier 
 Équipements possibles : `PROJECTOR`, `VIDEO_CONFERENCE`, `WHITEBOARD`, `TV_SCREEN`, `CONFERENCE_PHONE`, `WHEELCHAIR_ACCESS`.
 
 - Suppression **logique** : la salle est marquée comme retirée et reste dans son site.
-- Une salle retirée est introuvable, et son code reste réservé dans le site.
+- Une salle retirée est introuvable, et son code redevient libre dans le site.
 - Toutes les transitions de statut sont autorisées.
 
 ### 2.3 Occupation (RoomOccupancy)
@@ -198,7 +198,8 @@ Toutes les erreurs suivent le format **Problem Details (RFC 9457)**, avec :
 | Commande invalide (champ manquant ou mal formé) | `InvalidCommandException` | `400` |
 | Valeur refusée par un value object | `DomainValidationException` | `400` |
 | Règle métier violée | `BusinessRuleViolationException` | `409` |
-| Conflit de mise à jour (verrouillage optimiste) | — | `409` |
+| Conflit de mise à jour (verrouillage optimiste) | `ConcurrentUpdateException` | `409` |
+| Autre erreur de base ou de transaction (sans détail interne) | `TransactionalException` | `500` |
 | Permission manquante | — | `403` |
 | Erreur inattendue (sans détail interne) | — | `500` |
 
@@ -244,8 +245,34 @@ com.accenture.meetspace
     │   │   └── delete        DeleteSite, DeleteRoom
     │   ├── query             à venir
     │   └── port/out          SiteRepository
-    └── infrastructure        à venir : web, persistence, messaging, config
+    └── infrastructure
+        └── persistence
+            ├── models        SiteModel, MeetingRoomModel (entités JPA)
+            ├── repositories  SpringDataSiteRepository (Spring Data)
+            ├── mappers       SiteModelMapper (modèle JPA ↔ domaine)
+            └── adapters      JpaSiteRepository (implémente SiteRepository)
 ```
+
+### Persistance
+
+- **Socle** (`shared/infrastructure/persistence`) :
+  - `BaseModel` porte l'id (`String`, UUID en `char(36)`), `created_at`, `updated_at` et `deleted_at`, en UTC.
+  - `VersionModel` ajoute `@Version` et considère une entité comme nouvelle seulement si son id est nul ; sinon Spring Data fait un `merge`.
+- **Soft delete systématique** : `BaseModel` porte `@SQLRestriction("deleted_at IS NULL")`. Toutes les lectures JPA ignorent donc les lignes supprimées, sans filtre à écrire dans les requêtes. Le mapper remplit `deleted_at` avec la `Clock` injectée quand le domaine marque un élément comme supprimé.
+  - Hibernate n'applique pas cette restriction, héritée de `BaseModel`, au chargement d'une collection. Chaque association `@OneToMany` vers une entité soft-deletée doit donc la répéter : c'est le cas de `SiteModel.rooms`.
+  - Les futures requêtes `NamedParameterJdbcTemplate` ne passent pas par Hibernate : elles devront filtrer elles-mêmes `deleted_at is null`.
+- **Schéma** : il est créé par Flyway (`db/migration/V1__create_sites_and_meeting_rooms.sql`), avec trois tables : `sites`, `meeting_rooms` et `meeting_room_amenities`. Les contraintes en base doublent les règles du domaine :
+  - code et nom uniques parmi les sites non supprimés ;
+  - code unique parmi les salles non retirées d'un site ;
+  - capacité entre 1 et 200 ;
+  - statut parmi les trois valeurs.
+
+  Les unicités sont des index uniques fonctionnels (`case when deleted_at is null then code end`), qui ignorent les lignes supprimées.
+- **Restauration** : `Site.restore(Snapshot)` reconstruit le domaine depuis la base, et `MeetingRoom.restore` n'est visible que dans le package.
+- **Transactions** : l'adaptateur n'a ni `@Transactional` ni `EntityManager`. C'est le cas d'usage entier qui est transactionnel : `CommandHandlerBus` ouvre la transaction autour du handler, et toute exception levée par le handler l'annule (rollback).
+- **Verrouillage optimiste sur tout le site** : Hibernate incrémente `@Version` tout seul, mais seulement pour l'entité dont une colonne change. Ajouter ou modifier une salle ne toucherait donc pas la version du site. Les deux méthodes de chargement utilisées par les commandes (`findForUpdateById` et `findForUpdateByRoomId` dans `SpringDataSiteRepository`) portent donc `@Lock(OPTIMISTIC_FORCE_INCREMENT)` : un site chargé pour modification voit sa version incrémentée au commit, même quand seule une salle change. Ainsi, deux transactions qui modifient le même site, même par des salles différentes, ne peuvent pas toutes les deux réussir. Par exemple, supprimer un site pendant qu'une autre transaction y ajoute une salle échoue. L'incrément a lieu au commit.
+
+### Rôle de chaque couche
 
 - **domain** : aucune dépendance framework. Le domaine est découpé en `entities/`, `vo/`, `enums/` et `exceptions/`. `Site` et `MeetingRoom` sont tous deux dans `entities` pour que seul `Site` puisse modifier ses salles. `Site` n'hérite pas d'`AggregateRoot` pour l'instant, puisqu'il n'émet aucun événement.
 - **Entités** : chaque entité a un constructeur privé et une fabrique statique `create(...)`. Elle n'a **pas de getters** : son état se lit par un record public `Snapshot`, déclaré dans l'entité et renvoyé par `snapshot()`.
@@ -270,8 +297,16 @@ com.accenture.meetspace
   | DeleteSite | `DeleteSiteResponse(UUID siteId, boolean deleted)` |
   | DeleteRoom | `DeleteRoomResponse(UUID roomId, boolean deleted)` |
   - `SiteRepository` (écriture) : `save`, `findById`, `findByRoomId`, `existsByCode`, `existsByName`. `findById` et `findByRoomId` ignorent les sites supprimés ; `existsByCode` et `existsByName` les incluent.
-- **infrastructure** : contrôleurs REST, entités JPA et mappers MapStruct, adaptateurs des ports, listener RabbitMQ, migrations Flyway. Un site est chargé avec toutes ses salles, retirées comprises, pour la règle du code réservé.
-- **Transactions** : `CommandHandlerBus` exécute chaque handler dans une transaction. Une exception métier annule la transaction et remonte telle quelle ; seul un échec de la transaction elle-même est enveloppé dans `TransactionalException`.
+- **infrastructure** : contrôleurs REST, entités JPA et mappers MapStruct, adaptateurs des ports, listener RabbitMQ, migrations Flyway. Un site est chargé avec ses seules salles non retirées.
+- **Transactions** : `CommandHandlerBus` exécute tout le handler dans une seule transaction, et toute exception qui sort du handler l'annule. Les erreurs se répartissent en trois familles :
+
+  | Famille | Exception | Où elle naît | Rollback |
+  |---|---|---|---|
+  | Commande invalide | `InvalidCommandException` | à la construction de la commande, **avant** le bus | aucun, aucune transaction n'est encore ouverte |
+  | Erreur métier | `NotFoundException`, `BusinessRuleViolationException`, `DomainValidationException` | dans le domaine, pendant le handler | oui, l'exception remonte telle quelle |
+  | Erreur technique | `TransactionalException` ; sa sous-classe `ConcurrentUpdateException` pour un conflit de version | dans le bus, qui traduit au même endroit `TransactionException`, `DataAccessException` et `OptimisticLockingFailureException`, souvent levées au commit | oui |
+
+  Les exceptions métier n'héritent pas de `TransactionalException`. Le domaine ne connaît pas les transactions, et on doit pouvoir distinguer une erreur métier (`404` / `409` avec un code, jamais réessayée) d'une erreur technique (conflit `409` éventuellement réessayable, ou `500`).
 
 Les invariants appartiennent au domaine :
 
@@ -300,6 +335,18 @@ Démarche **TDD** : le test est toujours écrit avant le code.
 - Tests organisés avec `@Nested` et `@DisplayName` ; chaque test vérifie le statut **et** le corps de la réponse.
 - Couverture minimale : **80 %**.
 - Les éléments du socle `shared` ne sont pas testés.
+
+### Organisation des tests d'intégration
+
+Les tests d'intégration sont dans `room/integration/`, avec un fichier par adaptateur (`JpaSiteRepositoryTest`) :
+
+- chaque test porte `@JpaIntegrationTest` (dans `shared/integration`) et importe seulement ce qu'il teste (par exemple `@Import({JpaSiteRepository.class, SiteModelMapper.class})`). L'annotation regroupe :
+  - `@DataJpaTest` ;
+  - le profil `test` ;
+  - la `Clock` ;
+  - un nettoyage de la base avant chaque test : toutes les tables sont vidées, sauf `flyway_schema_history`, avant même l'ouverture de la transaction du test.
+- la configuration de test est dans `src/test/resources/application-test.yaml`. Elle déclare un vrai MySQL 8.4 lancé par Testcontainers via l'URL `jdbc:tc:mysql:8.4:///meetspace`, avec Flyway en validation et `ddl-auto: validate`. La même validation est active en dev ;
+- chaque test tourne dans une transaction annulée à la fin, sauf le groupe « optimistic locking », qui utilise de vraies transactions commitées (`TransactionTemplate`) et vide les tables après chaque test.
 
 ### Organisation des tests unitaires
 
@@ -350,7 +397,7 @@ Un value object qui porte une règle (comme `Capacity`) a son propre fichier de 
 
 - Les identifiants sont des **UUID**, générés par l'appelant et passés dans la commande.
 - Modifier un site avec un code ou un nom pris par un autre site renvoie `409`, comme à la création.
-- Un site ou une salle supprimés gardent leur code (et leur nom pour un site) réservé.
+- **Soft delete systématique** : un site supprimé ou une salle retirée restent en base avec `deleted_at`, mais aucune lecture ne les voit ; leur code (et le nom d'un site) redevient libre.
 - `Site` gère ses salles : ajout, modification, statut et retrait passent tous par lui.
 - La capacité est un value object (`Capacity`) qui porte la règle 1 à 200.
 - Une salle est créée `ACTIVE` ; le statut ne change que par `PATCH /rooms/{id}/status`.

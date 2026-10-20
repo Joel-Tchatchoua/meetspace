@@ -47,6 +47,13 @@ public final class Site {
         return new Site(id, code, name, address, timeZone);
     }
 
+    public static Site restore(Snapshot snapshot) {
+        var site = new Site(snapshot.id(), snapshot.code(), snapshot.name(), snapshot.address(), snapshot.timeZone());
+        site.deleted = snapshot.deleted();
+        snapshot.rooms().forEach(room -> site.rooms.put(room.id(), MeetingRoom.restore(room)));
+        return site;
+    }
+
     public void changeDetails(String code, String name, String address, ZoneId timeZone) {
         this.code = code;
         this.name = name;
@@ -108,7 +115,7 @@ public final class Site {
     }
 
     private void ensureRoomCodeIsFree(String code) {
-        if (rooms.values().stream().anyMatch(room -> room.hasCode(code))) {
+        if (rooms.values().stream().anyMatch(room -> !room.isDeleted() && room.hasCode(code))) {
             throw new RoomCodeAlreadyUsedException(id, code);
         }
     }

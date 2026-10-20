@@ -37,6 +37,14 @@ public final class MeetingRoom {
         return new MeetingRoom(id, code, name, floor, capacity, amenities);
     }
 
+    static MeetingRoom restore(Snapshot snapshot) {
+        var room = new MeetingRoom(snapshot.id(), snapshot.code(), snapshot.name(), snapshot.floor(),
+                snapshot.capacity(), snapshot.amenities());
+        room.status = snapshot.status();
+        room.deleted = snapshot.deleted();
+        return room;
+    }
+
     void changeDetails(String code, String name, int floor, Capacity capacity, Set<Amenity> amenities) {
         this.code = code;
         this.name = name;
