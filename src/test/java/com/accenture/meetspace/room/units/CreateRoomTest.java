@@ -2,6 +2,7 @@ package com.accenture.meetspace.room.units;
 
 import com.accenture.meetspace.room.application.command.create.CreateRoomCommand;
 import com.accenture.meetspace.room.application.command.create.CreateRoomCommandHandler;
+import com.accenture.meetspace.room.application.command.create.CreateRoomResponse;
 import com.accenture.meetspace.room.domain.entities.Site;
 import com.accenture.meetspace.room.domain.enums.Amenity;
 import com.accenture.meetspace.room.domain.enums.RoomStatus;
@@ -159,6 +160,16 @@ class CreateRoomTest {
         @Nested
         @DisplayName("succeeds")
         class Succeeds {
+
+            @Test
+            @DisplayName("returning the created room id")
+            void returningTheCreatedRoomId() {
+                var command = dodoIn(ebeneId);
+
+                var response = handler.handle(command);
+
+                assertThat(response).isEqualTo(new CreateRoomResponse(command.roomId().value(), true));
+            }
 
             @Test
             @DisplayName("adding an active room to the site")

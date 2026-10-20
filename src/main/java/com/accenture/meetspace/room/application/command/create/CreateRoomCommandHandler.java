@@ -4,7 +4,8 @@ import com.accenture.meetspace.room.application.port.out.SiteRepository;
 import com.accenture.meetspace.room.domain.exceptions.SiteNotFoundException;
 import com.accenture.meetspace.shared.application.command.CommandHandler;
 
-public class CreateRoomCommandHandler implements CommandHandler<CreateRoomCommand> {
+public class CreateRoomCommandHandler
+        implements CommandHandler<CreateRoomCommand, CreateRoomResponse> {
 
     private final SiteRepository siteRepository;
 
@@ -13,11 +14,12 @@ public class CreateRoomCommandHandler implements CommandHandler<CreateRoomComman
     }
 
     @Override
-    public void handle(CreateRoomCommand command) {
+    public CreateRoomResponse handle(CreateRoomCommand command) {
         var site = siteRepository.findById(command.siteId())
                 .orElseThrow(() -> new SiteNotFoundException(command.siteId()));
         site.addRoom(command.roomId(), command.code(), command.name(), command.floor(), command.capacity(),
                 command.amenities());
         siteRepository.save(site);
+        return new CreateRoomResponse(command.roomId().value(), true);
     }
 }

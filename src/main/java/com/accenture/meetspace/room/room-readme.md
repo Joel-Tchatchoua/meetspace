@@ -243,7 +243,7 @@ com.accenture.meetspace
     │   │   ├── changestatus  ChangeRoomStatus
     │   │   └── delete        DeleteSite, DeleteRoom
     │   ├── query             à venir
-    │   └── port              SiteRepository
+    │   └── port/out          SiteRepository
     └── infrastructure        à venir : web, persistence, messaging, config
 ```
 
@@ -258,7 +258,17 @@ com.accenture.meetspace
   Un snapshot est une copie en lecture seule : le modifier ne change pas l'entité. Les handlers, les stubs et les tests lisent l'état par `snapshot()`. Les quelques questions dont `Site` a besoin sur ses salles (`MeetingRoom.hasCode`, `MeetingRoom.isDeleted`) ne sont visibles que dans le package.
 - **application** :
   - Une **commande** est un record qui vérifie ses invariants dans son constructeur et lève `InvalidCommandException` avec le nom du champ en cause. Chaque cas d'usage garde ses propres règles, même si elles ressemblent à celles d'un autre.
-  - Un **handler** charge le `Site` (par `findById`, ou par `findByRoomId` quand la commande ne connaît que la salle), appelle une méthode métier de `Site`, puis l'enregistre. Il ne renvoie rien (CQS).
+  - Un **handler** charge le `Site` (par `findById`, ou par `findByRoomId` quand la commande ne connaît que la salle), appelle une méthode métier de `Site`, puis l'enregistre. Son type de retour est déclaré par la commande : `Command<R>` est traitée par un `CommandHandler<C, R>`, et `CommandBus.dispatch` renvoie ce `R`. Chaque cas d'usage renvoie son propre record de réponse, placé à côté de sa commande. L'infra le reprend tel quel comme réponse HTTP : il ne contient donc que des types simples (`UUID` plutôt que `SiteId`).
+
+  | Cas d'usage | Réponse |
+  |---|---|
+  | CreateSite | `CreateSiteResponse(UUID siteId, boolean created)` |
+  | CreateRoom | `CreateRoomResponse(UUID roomId, boolean created)` |
+  | UpdateSite | `UpdateSiteResponse(UUID siteId, boolean updated)` |
+  | UpdateRoom | `UpdateRoomResponse(UUID roomId, boolean updated)` |
+  | ChangeRoomStatus | `ChangeRoomStatusResponse(UUID roomId, RoomStatus status, boolean changed)` |
+  | DeleteSite | `DeleteSiteResponse(UUID siteId, boolean deleted)` |
+  | DeleteRoom | `DeleteRoomResponse(UUID roomId, boolean deleted)` |
   - `SiteRepository` (écriture) : `save`, `findById`, `findByRoomId`, `existsByCode`, `existsByName`. `findById` et `findByRoomId` ignorent les sites supprimés ; `existsByCode` et `existsByName` les incluent.
 - **infrastructure** : contrôleurs REST, entités JPA et mappers MapStruct, adaptateurs des ports, listener RabbitMQ, migrations Flyway. Un site est chargé avec toutes ses salles, retirées comprises, pour la règle du code réservé.
 - **Transactions** : `CommandHandlerBus` exécute chaque handler dans une transaction. Une exception métier annule la transaction et remonte telle quelle ; seul un échec de la transaction elle-même est enveloppé dans `TransactionalException`.
@@ -345,7 +355,7 @@ Un value object qui porte une règle (comme `Capacity`) a son propre fichier de 
 - La capacité est un value object (`Capacity`) qui porte la règle 1 à 200.
 - Une salle est créée `ACTIVE` ; le statut ne change que par `PATCH /rooms/{id}/status`.
 - Toutes les transitions de statut sont autorisées.
-- Les commandes ne renvoient rien (CQS) ; la création se fait avec un identifiant déjà connu de l'appelant.
+- Une commande déclare son type de retour (`Command<R>`) ; elle ne renvoie pas forcément `void`. La création se fait avec un identifiant déjà connu de l'appelant.
 - Les entités n'ont pas de getters : leur état se lit par un record `Snapshot` interne, et elles se créent par une fabrique `create(...)` avec un constructeur privé.
 
 ## 11. Points à clarifier

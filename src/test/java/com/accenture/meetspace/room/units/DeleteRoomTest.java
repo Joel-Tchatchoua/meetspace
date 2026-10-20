@@ -2,6 +2,7 @@ package com.accenture.meetspace.room.units;
 
 import com.accenture.meetspace.room.application.command.delete.DeleteRoomCommand;
 import com.accenture.meetspace.room.application.command.delete.DeleteRoomCommandHandler;
+import com.accenture.meetspace.room.application.command.delete.DeleteRoomResponse;
 import com.accenture.meetspace.room.domain.entities.MeetingRoom;
 import com.accenture.meetspace.room.domain.entities.Site;
 import com.accenture.meetspace.room.domain.exceptions.RoomNotFoundException;
@@ -69,6 +70,14 @@ class DeleteRoomTest {
         @Nested
         @DisplayName("succeeds")
         class Succeeds {
+
+            @Test
+            @DisplayName("returning the deleted room id")
+            void returningTheDeletedRoomId() {
+                var response = handler.handle(new DeleteRoomCommand(dodoId));
+
+                assertThat(response).isEqualTo(new DeleteRoomResponse(dodoId.value(), true));
+            }
 
             @Test
             @DisplayName("removing the room from its site")

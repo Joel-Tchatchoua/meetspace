@@ -2,6 +2,7 @@ package com.accenture.meetspace.room.units;
 
 import com.accenture.meetspace.room.application.command.changestatus.ChangeRoomStatusCommand;
 import com.accenture.meetspace.room.application.command.changestatus.ChangeRoomStatusCommandHandler;
+import com.accenture.meetspace.room.application.command.changestatus.ChangeRoomStatusResponse;
 import com.accenture.meetspace.room.domain.entities.Site;
 import com.accenture.meetspace.room.domain.enums.RoomStatus;
 import com.accenture.meetspace.room.domain.exceptions.RoomNotFoundException;
@@ -82,6 +83,15 @@ class ChangeRoomStatusTest {
         @Nested
         @DisplayName("succeeds")
         class Succeeds {
+
+            @Test
+            @DisplayName("returning the room id and its new status")
+            void returningTheRoomIdAndItsNewStatus() {
+                var response = handler.handle(new ChangeRoomStatusCommand(dodoId, RoomStatus.MAINTENANCE));
+
+                assertThat(response)
+                        .isEqualTo(new ChangeRoomStatusResponse(dodoId.value(), RoomStatus.MAINTENANCE, true));
+            }
 
             @ParameterizedTest
             @EnumSource(RoomStatus.class)

@@ -9,7 +9,7 @@ import static com.accenture.meetspace.shared.application.command.CommandPrecondi
 import static com.accenture.meetspace.shared.application.command.CommandPreconditions.requireTimeZoneOrDefault;
 
 public record CreateSiteCommand(SiteId siteId, String code, String name, String address, String timeZone)
-        implements Command {
+        implements Command<CreateSiteResponse> {
 
     public CreateSiteCommand {
         requireNonNull(siteId, "siteId");

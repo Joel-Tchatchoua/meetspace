@@ -2,6 +2,7 @@ package com.accenture.meetspace.room.units;
 
 import com.accenture.meetspace.room.application.command.create.CreateSiteCommand;
 import com.accenture.meetspace.room.application.command.create.CreateSiteCommandHandler;
+import com.accenture.meetspace.room.application.command.create.CreateSiteResponse;
 import com.accenture.meetspace.room.domain.exceptions.SiteCodeAlreadyUsedException;
 import com.accenture.meetspace.room.domain.exceptions.SiteNameAlreadyUsedException;
 import com.accenture.meetspace.room.domain.vo.SiteId;
@@ -121,6 +122,16 @@ class CreateSiteTest {
         @Nested
         @DisplayName("succeeds")
         class Succeeds {
+
+            @Test
+            @DisplayName("returning the created site id")
+            void returningTheCreatedSiteId() {
+                var siteId = SiteId.generate();
+
+                var response = handler.handle(ebene(siteId));
+
+                assertThat(response).isEqualTo(new CreateSiteResponse(siteId.value(), true));
+            }
 
             @Test
             @DisplayName("creating the site with the command details")

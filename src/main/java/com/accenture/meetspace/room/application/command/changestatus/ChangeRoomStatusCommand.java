@@ -6,7 +6,8 @@ import com.accenture.meetspace.shared.application.command.Command;
 
 import static com.accenture.meetspace.shared.application.command.CommandPreconditions.requireNonNull;
 
-public record ChangeRoomStatusCommand(RoomId roomId, RoomStatus status) implements Command {
+public record ChangeRoomStatusCommand(RoomId roomId, RoomStatus status)
+        implements Command<ChangeRoomStatusResponse> {
 
     public ChangeRoomStatusCommand {
         requireNonNull(roomId, "roomId");

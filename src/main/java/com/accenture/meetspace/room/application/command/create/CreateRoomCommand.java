@@ -13,7 +13,7 @@ import static com.accenture.meetspace.shared.application.command.CommandPrecondi
 import static com.accenture.meetspace.shared.application.command.CommandPreconditions.requireNotBlank;
 
 public record CreateRoomCommand(RoomId roomId, SiteId siteId, String code, String name, Integer floor,
-                                Capacity capacity, Set<Amenity> amenities) implements Command {
+                                Capacity capacity, Set<Amenity> amenities) implements Command<CreateRoomResponse> {
 
     public CreateRoomCommand {
         requireNonNull(roomId, "roomId");

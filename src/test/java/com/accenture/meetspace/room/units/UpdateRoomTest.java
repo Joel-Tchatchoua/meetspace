@@ -2,6 +2,7 @@ package com.accenture.meetspace.room.units;
 
 import com.accenture.meetspace.room.application.command.update.UpdateRoomCommand;
 import com.accenture.meetspace.room.application.command.update.UpdateRoomCommandHandler;
+import com.accenture.meetspace.room.application.command.update.UpdateRoomResponse;
 import com.accenture.meetspace.room.domain.entities.Site;
 import com.accenture.meetspace.room.domain.enums.Amenity;
 import com.accenture.meetspace.room.domain.exceptions.RoomCodeAlreadyUsedException;
@@ -141,6 +142,14 @@ class UpdateRoomTest {
         @Nested
         @DisplayName("succeeds")
         class Succeeds {
+
+            @Test
+            @DisplayName("returning the updated room id")
+            void returningTheUpdatedRoomId() {
+                var response = handler.handle(new UpdateRoomCommand(dodoId, "R101", "Dodo XL", 1, EIGHT, AMENITIES));
+
+                assertThat(response).isEqualTo(new UpdateRoomResponse(dodoId.value(), true));
+            }
 
             @Test
             @DisplayName("replacing every detail of the room")

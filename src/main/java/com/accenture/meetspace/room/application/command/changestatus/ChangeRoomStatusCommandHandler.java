@@ -4,7 +4,8 @@ import com.accenture.meetspace.room.application.port.out.SiteRepository;
 import com.accenture.meetspace.room.domain.exceptions.RoomNotFoundException;
 import com.accenture.meetspace.shared.application.command.CommandHandler;
 
-public class ChangeRoomStatusCommandHandler implements CommandHandler<ChangeRoomStatusCommand> {
+public class ChangeRoomStatusCommandHandler
+        implements CommandHandler<ChangeRoomStatusCommand, ChangeRoomStatusResponse> {
 
     private final SiteRepository siteRepository;
 
@@ -13,7 +14,7 @@ public class ChangeRoomStatusCommandHandler implements CommandHandler<ChangeRoom
     }
 
     @Override
-    public void handle(ChangeRoomStatusCommand command) {
+    public ChangeRoomStatusResponse handle(ChangeRoomStatusCommand command) {
         var site = siteRepository.findByRoomId(command.roomId())
                 .orElseThrow(() -> new RoomNotFoundException(command.roomId()));
         switch (command.status()) {
@@ -22,5 +23,6 @@ public class ChangeRoomStatusCommandHandler implements CommandHandler<ChangeRoom
             case CLOSED -> site.closeRoom(command.roomId());
         }
         siteRepository.save(site);
+        return new ChangeRoomStatusResponse(command.roomId().value(), command.status(), true);
     }
 }

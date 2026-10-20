@@ -8,7 +8,8 @@ import com.accenture.meetspace.shared.application.command.CommandHandler;
 
 import java.time.ZoneId;
 
-public class UpdateSiteCommandHandler implements CommandHandler<UpdateSiteCommand> {
+public class UpdateSiteCommandHandler
+        implements CommandHandler<UpdateSiteCommand, UpdateSiteResponse> {
 
     private final SiteRepository siteRepository;
 
@@ -17,7 +18,7 @@ public class UpdateSiteCommandHandler implements CommandHandler<UpdateSiteComman
     }
 
     @Override
-    public void handle(UpdateSiteCommand command) {
+    public UpdateSiteResponse handle(UpdateSiteCommand command) {
         var site = siteRepository.findById(command.siteId())
                 .orElseThrow(() -> new SiteNotFoundException(command.siteId()));
         var current = site.snapshot();
@@ -29,5 +30,6 @@ public class UpdateSiteCommandHandler implements CommandHandler<UpdateSiteComman
         }
         site.changeDetails(command.code(), command.name(), command.address(), ZoneId.of(command.timeZone()));
         siteRepository.save(site);
+        return new UpdateSiteResponse(command.siteId().value(), true);
     }
 }

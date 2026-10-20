@@ -1,4 +1,4 @@
 package com.accenture.meetspace.shared.application.command;
 
-public interface Command {
+public interface Command<R> {
 }

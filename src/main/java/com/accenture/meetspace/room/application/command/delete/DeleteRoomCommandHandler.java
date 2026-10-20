@@ -4,7 +4,8 @@ import com.accenture.meetspace.room.application.port.out.SiteRepository;
 import com.accenture.meetspace.room.domain.exceptions.RoomNotFoundException;
 import com.accenture.meetspace.shared.application.command.CommandHandler;
 
-public class DeleteRoomCommandHandler implements CommandHandler<DeleteRoomCommand> {
+public class DeleteRoomCommandHandler
+        implements CommandHandler<DeleteRoomCommand, DeleteRoomResponse> {
 
     private final SiteRepository siteRepository;
 
@@ -13,10 +14,11 @@ public class DeleteRoomCommandHandler implements CommandHandler<DeleteRoomComman
     }
 
     @Override
-    public void handle(DeleteRoomCommand command) {
+    public DeleteRoomResponse handle(DeleteRoomCommand command) {
         var site = siteRepository.findByRoomId(command.roomId())
                 .orElseThrow(() -> new RoomNotFoundException(command.roomId()));
         site.removeRoom(command.roomId());
         siteRepository.save(site);
+        return new DeleteRoomResponse(command.roomId().value(), true);
     }
 }

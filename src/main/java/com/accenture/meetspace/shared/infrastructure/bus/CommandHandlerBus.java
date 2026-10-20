@@ -17,10 +17,10 @@ import java.util.stream.Collectors;
 @Component
 public class CommandHandlerBus implements CommandBus {
 
-    private final Map<Class<? extends Command>, CommandHandlerRegistration<?>> registrations;
+    private final Map<Class<?>, CommandHandlerRegistration<?, ?>> registrations;
     private final TransactionTemplate transactionTemplate;
 
-    public CommandHandlerBus(List<CommandHandlerRegistration<?>> registrations,
+    public CommandHandlerBus(List<CommandHandlerRegistration<?, ?>> registrations,
                              PlatformTransactionManager transactionManager) {
         this.registrations = registrations.stream()
                 .collect(Collectors.toUnmodifiableMap(
@@ -34,16 +34,17 @@ public class CommandHandlerBus implements CommandBus {
     }
 
     @Override
-    public void dispatch(Command command) {
+    @SuppressWarnings("unchecked")
+    public <R> R dispatch(Command<R> command) {
         var registration = registrationFor(command);
         try {
-            transactionTemplate.executeWithoutResult(status -> registration.handle(command));
+            return transactionTemplate.execute(status -> (R) registration.handle(command));
         } catch (TransactionException e) {
             throw new TransactionalException(command, e);
         }
     }
 
-    private CommandHandlerRegistration<?> registrationFor(Command command) {
+    private CommandHandlerRegistration<?, ?> registrationFor(Command<?> command) {
         var registration = registrations.get(command.getClass());
         if (registration == null) {
             throw new IllegalStateException("No handler registered for " + command.getClass().getName());

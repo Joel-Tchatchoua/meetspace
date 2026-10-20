@@ -2,6 +2,7 @@ package com.accenture.meetspace.room.units;
 
 import com.accenture.meetspace.room.application.command.update.UpdateSiteCommand;
 import com.accenture.meetspace.room.application.command.update.UpdateSiteCommandHandler;
+import com.accenture.meetspace.room.application.command.update.UpdateSiteResponse;
 import com.accenture.meetspace.room.domain.entities.Site;
 import com.accenture.meetspace.room.domain.exceptions.SiteCodeAlreadyUsedException;
 import com.accenture.meetspace.room.domain.exceptions.SiteNameAlreadyUsedException;
@@ -130,6 +131,14 @@ class UpdateSiteTest {
         @Nested
         @DisplayName("succeeds")
         class Succeeds {
+
+            @Test
+            @DisplayName("returning the updated site id")
+            void returningTheUpdatedSiteId() {
+                var response = handler.handle(new UpdateSiteCommand(ebeneId, "EBX", "Ebène Tower", "Tower 1", null));
+
+                assertThat(response).isEqualTo(new UpdateSiteResponse(ebeneId.value(), true));
+            }
 
             @Test
             @DisplayName("replacing every detail of the site")

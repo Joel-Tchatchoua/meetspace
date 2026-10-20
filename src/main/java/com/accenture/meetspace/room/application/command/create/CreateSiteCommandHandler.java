@@ -8,7 +8,8 @@ import com.accenture.meetspace.shared.application.command.CommandHandler;
 
 import java.time.ZoneId;
 
-public class CreateSiteCommandHandler implements CommandHandler<CreateSiteCommand> {
+public class CreateSiteCommandHandler
+        implements CommandHandler<CreateSiteCommand, CreateSiteResponse> {
 
     private final SiteRepository siteRepository;
 
@@ -17,7 +18,7 @@ public class CreateSiteCommandHandler implements CommandHandler<CreateSiteComman
     }
 
     @Override
-    public void handle(CreateSiteCommand command) {
+    public CreateSiteResponse handle(CreateSiteCommand command) {
         if (siteRepository.existsByCode(command.code())) {
             throw new SiteCodeAlreadyUsedException(command.code());
         }
@@ -26,5 +27,6 @@ public class CreateSiteCommandHandler implements CommandHandler<CreateSiteComman
         }
         siteRepository.save(Site.create(
                 command.siteId(), command.code(), command.name(), command.address(), ZoneId.of(command.timeZone())));
+        return new CreateSiteResponse(command.siteId().value(), true);
     }
 }

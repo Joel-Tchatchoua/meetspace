@@ -12,7 +12,7 @@ import static com.accenture.meetspace.shared.application.command.CommandPrecondi
 import static com.accenture.meetspace.shared.application.command.CommandPreconditions.requireNotBlank;
 
 public record UpdateRoomCommand(RoomId roomId, String code, String name, Integer floor, Capacity capacity,
-                                Set<Amenity> amenities) implements Command {
+                                Set<Amenity> amenities) implements Command<UpdateRoomResponse> {
 
     public UpdateRoomCommand {
         requireNonNull(roomId, "roomId");
