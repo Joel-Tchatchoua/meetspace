@@ -100,6 +100,8 @@ Enregistrement, propre au module, des créneaux où une salle est occupée.
 - Contrôle par endpoint avec `@PreAuthorize`.
 - Seuls les endpoints de health sont publics ; tous les autres exigent un token valide.
 
+> **État actuel : sécurité provisoirement ouverte.** `SecurityConfiguration` (dans `shared/infrastructure/config`) est stateless, sans CSRF, et laisse `/api/**` en `permitAll`. Les endpoints d'administration sont donc accessibles sans token jusqu'à l'étape dédiée à la sécurité (resource server JWT Keycloak, `@PreAuthorize`, JWT de test).
+
 ## 4. API
 
 Base : `/api/v1`.
@@ -246,12 +248,40 @@ com.accenture.meetspace
     │   ├── query             à venir
     │   └── port/out          SiteRepository
     └── infrastructure
-        └── persistence
-            ├── models        SiteModel, MeetingRoomModel (entités JPA)
-            ├── repositories  SpringDataSiteRepository (Spring Data)
-            ├── mappers       SiteModelMapper (modèle JPA ↔ domaine)
-            └── adapters      JpaSiteRepository (implémente SiteRepository)
+        ├── config            RoomCommandHandlersConfiguration (handlers déclarés auprès du bus)
+        ├── persistence
+        │   ├── models        SiteModel, MeetingRoomModel (entités JPA)
+        │   ├── repositories  SpringDataSiteRepository (Spring Data)
+        │   ├── mappers       SiteModelMapper (modèle JPA ↔ domaine)
+        │   └── adapters/out  JpaSiteRepository (implémente SiteRepository)
+        └── web
+            ├── api           CreateSiteApi (mapping, validation et documentation OpenAPI)
+            ├── actions       CreateSiteAction (une action = un endpoint)
+            ├── requests      CreateSiteRequest (contraintes de validation)
+            └── exceptions    RoomExceptionHandler (hérite du gestionnaire générique de shared)
 ```
+
+### Web
+
+- **Une action par endpoint.** Il n'y a pas de contrôleur qui regroupe GET, POST, PUT… : chaque classe `XxxAction` fait une seule chose.
+- **Une interface `XxxApi` par action.** Elle porte tout le mapping (`@RequestMapping`, `@PostMapping`, `@Valid @RequestBody`) et toute la documentation OpenAPI (`@Tag`, `@Operation`, `@ApiResponse`, exemples). L'action l'implémente et ne contient que le code : construire la commande, l'envoyer au `CommandBus`, renvoyer la réponse.
+- **Deux niveaux de validation :**
+  - la requête (`XxxRequest`, avec Bean Validation) contrôle la forme des données : champs obligatoires, longueurs ;
+  - la commande garde ses propres invariants, comme le fuseau horaire connu.
+- **Commande** : la requête la construit elle-même avec une méthode `toCommand()`, qui génère aussi l'identifiant (`SiteId.generate()`). Une création renvoie `201`, le record de réponse et un en-tête `Location`.
+- **Erreurs** : tous les cas génériques sont dans `ProblemDetailsExceptionHandler`, une classe abstraite de `shared/infrastructure/web/exceptions` qui hérite de `ResponseEntityExceptionHandler`. `RoomExceptionHandler` est un `@RestControllerAdvice` limité au package `room` qui hérite de cette classe. Il ne fournit que le nom du service (`room`), et c'est là qu'on ajoutera un cas propre au module si besoin. Chaque erreur est un `application/problem+json` avec `title`, `status`, `detail`, `instance`, et les propriétés `code`, `service` (`room`) et `timestamp` (venant de la `Clock`).
+
+  | Cas | Statut | `code` |
+  |---|---|---|
+  | Requête invalide (Bean Validation) | `400` | `INVALID_REQUEST`, avec `errors: [{field, message}]` |
+  | Invariant de commande | `400` | `INVALID_REQUEST`, avec `errors: [{field, message}]` |
+  | Corps illisible | `400` | `MALFORMED_REQUEST` |
+  | Value object refusé | `400` | code de l'exception (ex. `INVALID_CAPACITY`) |
+  | Introuvable | `404` | code de l'exception (ex. `SITE_NOT_FOUND`) |
+  | Règle métier | `409` | code de l'exception (ex. `SITE_CODE_ALREADY_USED`) |
+  | Conflit de version | `409` | `CONCURRENT_UPDATE` |
+  | Erreur technique | `500` | `TECHNICAL_ERROR`, sans détail interne |
+  | Erreur inattendue | `500` | `UNEXPECTED_ERROR`, sans détail interne |
 
 ### Persistance
 
@@ -335,6 +365,16 @@ Démarche **TDD** : le test est toujours écrit avant le code.
 - Tests organisés avec `@Nested` et `@DisplayName` ; chaque test vérifie le statut **et** le corps de la réponse.
 - Couverture minimale : **80 %**.
 - Les éléments du socle `shared` ne sont pas testés.
+
+### Organisation des tests E2E
+
+Les tests E2E sont dans `room/e2e/`, avec un fichier par endpoint (`CreateSiteE2ETest`). Ils portent `@E2ETest` (dans `shared/e2e`), qui regroupe :
+- `@SpringBootTest` sur un port aléatoire ;
+- `WebTestClient` ;
+- le profil `test` ;
+- le même nettoyage de la base avant chaque test.
+
+Chaque test vérifie le statut **et** le corps de la réponse, et contrôle la base quand l'API ne permet pas encore de relire la ressource.
 
 ### Organisation des tests d'intégration
 
