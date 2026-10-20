@@ -1,8 +1,8 @@
 package com.accenture.meetspace.room.units;
 
-import com.accenture.meetspace.room.application.command.update.UpdateRoomCommand;
-import com.accenture.meetspace.room.application.command.update.UpdateRoomCommandHandler;
-import com.accenture.meetspace.room.application.command.update.UpdateRoomResponse;
+import com.accenture.meetspace.room.application.usecases.update.UpdateRoomCommand;
+import com.accenture.meetspace.room.application.usecases.update.UpdateRoomCommandHandler;
+import com.accenture.meetspace.room.application.usecases.update.UpdateRoomResponse;
 import com.accenture.meetspace.room.domain.entities.Site;
 import com.accenture.meetspace.room.domain.enums.Amenity;
 import com.accenture.meetspace.room.domain.exceptions.RoomCodeAlreadyUsedException;

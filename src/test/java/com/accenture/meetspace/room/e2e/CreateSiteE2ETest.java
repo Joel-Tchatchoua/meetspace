@@ -1,6 +1,6 @@
 package com.accenture.meetspace.room.e2e;
 
-import com.accenture.meetspace.room.application.command.create.CreateSiteResponse;
+import com.accenture.meetspace.room.application.usecases.create.CreateSiteResponse;
 import com.accenture.meetspace.shared.e2e.E2ETest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

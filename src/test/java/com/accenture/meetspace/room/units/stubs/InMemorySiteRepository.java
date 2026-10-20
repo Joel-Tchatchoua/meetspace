@@ -1,6 +1,6 @@
 package com.accenture.meetspace.room.units.stubs;
 
-import com.accenture.meetspace.room.application.port.out.SiteRepository;
+import com.accenture.meetspace.room.application.port.out.repository.SiteRepository;
 import com.accenture.meetspace.room.domain.entities.Site;
 import com.accenture.meetspace.room.domain.vo.RoomId;
 import com.accenture.meetspace.room.domain.vo.SiteId;

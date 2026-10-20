@@ -1,8 +1,8 @@
 package com.accenture.meetspace.room.units;
 
-import com.accenture.meetspace.room.application.command.update.UpdateSiteCommand;
-import com.accenture.meetspace.room.application.command.update.UpdateSiteCommandHandler;
-import com.accenture.meetspace.room.application.command.update.UpdateSiteResponse;
+import com.accenture.meetspace.room.application.usecases.update.UpdateSiteCommand;
+import com.accenture.meetspace.room.application.usecases.update.UpdateSiteCommandHandler;
+import com.accenture.meetspace.room.application.usecases.update.UpdateSiteResponse;
 import com.accenture.meetspace.room.domain.entities.Site;
 import com.accenture.meetspace.room.domain.exceptions.SiteCodeAlreadyUsedException;
 import com.accenture.meetspace.room.domain.exceptions.SiteNameAlreadyUsedException;

@@ -1,6 +1,6 @@
 # Module Room — Guideline
 
-Référence de toutes les règles du module `room`, tirées du cahier des charges (`README.md`) et des choix d'architecture du projet (`CLAUDE.md`). En cas de doute, le cahier des charges fait foi ; les points non tranchés sont listés en fin de document.
+Référence de toutes les règles du module `room`, tirées du cahier des charges (`README.md`) et des choix d'architecture du projet .
 
 ## 1. Responsabilité
 

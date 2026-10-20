@@ -1,9 +1,9 @@
 package com.accenture.meetspace.room.infrastructure.config;
 
-import com.accenture.meetspace.room.application.command.create.CreateSiteCommand;
-import com.accenture.meetspace.room.application.command.create.CreateSiteCommandHandler;
-import com.accenture.meetspace.room.application.command.create.CreateSiteResponse;
-import com.accenture.meetspace.room.application.port.out.SiteRepository;
+import com.accenture.meetspace.room.application.usecases.create.CreateSiteCommand;
+import com.accenture.meetspace.room.application.usecases.create.CreateSiteCommandHandler;
+import com.accenture.meetspace.room.application.usecases.create.CreateSiteResponse;
+import com.accenture.meetspace.room.application.port.out.repository.SiteRepository;
 import com.accenture.meetspace.shared.application.command.CommandHandlerRegistration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

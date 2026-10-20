@@ -1,8 +1,8 @@
 package com.accenture.meetspace.room.units;
 
-import com.accenture.meetspace.room.application.command.changestatus.ChangeRoomStatusCommand;
-import com.accenture.meetspace.room.application.command.changestatus.ChangeRoomStatusCommandHandler;
-import com.accenture.meetspace.room.application.command.changestatus.ChangeRoomStatusResponse;
+import com.accenture.meetspace.room.application.usecases.changestatus.ChangeRoomStatusCommand;
+import com.accenture.meetspace.room.application.usecases.changestatus.ChangeRoomStatusCommandHandler;
+import com.accenture.meetspace.room.application.usecases.changestatus.ChangeRoomStatusResponse;
 import com.accenture.meetspace.room.domain.entities.Site;
 import com.accenture.meetspace.room.domain.enums.RoomStatus;
 import com.accenture.meetspace.room.domain.exceptions.RoomNotFoundException;

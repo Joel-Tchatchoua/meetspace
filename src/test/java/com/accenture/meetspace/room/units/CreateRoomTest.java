@@ -1,8 +1,8 @@
 package com.accenture.meetspace.room.units;
 
-import com.accenture.meetspace.room.application.command.create.CreateRoomCommand;
-import com.accenture.meetspace.room.application.command.create.CreateRoomCommandHandler;
-import com.accenture.meetspace.room.application.command.create.CreateRoomResponse;
+import com.accenture.meetspace.room.application.usecases.create.CreateRoomCommand;
+import com.accenture.meetspace.room.application.usecases.create.CreateRoomCommandHandler;
+import com.accenture.meetspace.room.application.usecases.create.CreateRoomResponse;
 import com.accenture.meetspace.room.domain.entities.Site;
 import com.accenture.meetspace.room.domain.enums.Amenity;
 import com.accenture.meetspace.room.domain.enums.RoomStatus;

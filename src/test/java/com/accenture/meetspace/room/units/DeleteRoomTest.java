@@ -1,8 +1,8 @@
 package com.accenture.meetspace.room.units;
 
-import com.accenture.meetspace.room.application.command.delete.DeleteRoomCommand;
-import com.accenture.meetspace.room.application.command.delete.DeleteRoomCommandHandler;
-import com.accenture.meetspace.room.application.command.delete.DeleteRoomResponse;
+import com.accenture.meetspace.room.application.usecases.delete.DeleteRoomCommand;
+import com.accenture.meetspace.room.application.usecases.delete.DeleteRoomCommandHandler;
+import com.accenture.meetspace.room.application.usecases.delete.DeleteRoomResponse;
 import com.accenture.meetspace.room.domain.entities.MeetingRoom;
 import com.accenture.meetspace.room.domain.entities.Site;
 import com.accenture.meetspace.room.domain.exceptions.RoomNotFoundException;
