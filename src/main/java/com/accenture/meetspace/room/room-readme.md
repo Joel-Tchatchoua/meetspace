@@ -128,8 +128,8 @@ Toutes les listes sont paginées avec les paramètres `page`, `size` et `sort`, 
 
 | Endpoint | Accès | Nature | Comportement |
 |---|---|---|---|
-| `GET /sites/{siteId}/rooms` | Connecté | Query | Salles d'un site, filtrables par capacité minimale, équipements, étage et statut |
-| `GET /rooms/{id}` | Connecté | Query | Détails de la salle, avec son site et le fuseau horaire du site |
+| `GET /sites/{siteId}/rooms` | Connecté | Query | Salles non retirées d'un site, paginées, triables (code par défaut, name, floor, capacity, status) et filtrables : `minCapacity` (≥ 1), `amenities` (la salle doit **toutes** les avoir, paramètre répétable), `floor`, `status` ; `404` si le site est introuvable |
+| `GET /rooms/{id}` | Connecté | Query | Détails de la salle (équipements triés) avec `site: {id, code, name, timeZone}` ; `404` si introuvable ou retirée |
 | `POST /sites/{siteId}/rooms` | Admin | Command | Ajoute une salle `ACTIVE` au site ; `404` si le site est introuvable, `409` si le code est pris dans le site |
 | `PUT /rooms/{id}` | Admin | Command | Remplace le code, le nom, l'étage, la capacité et les équipements, sans toucher au site ni au statut ; `404` si introuvable, `409` si le code est pris dans le site |
 | `PATCH /rooms/{id}/status` | Admin | Command | Change le statut (ex. mise en maintenance) ; `404` si introuvable |
@@ -245,16 +245,16 @@ com.accenture.meetspace
     │   │   ├── update                UpdateSite, UpdateRoom
     │   │   ├── changestatus          ChangeRoomStatus
     │   │   ├── delete                DeleteSite, DeleteRoom
-    │   │   └── query                 SiteView, GetSiteQuery(+Handler), ListSitesQuery(+Handler)
+    │   │   └── query                 SiteView, RoomView, Get/ListSites et Get/ListRooms Query(+Handler)
     │   └── port/out/repository       SiteRepository
     └── infrastructure
         ├── config                    RoomCommandHandlersConfiguration (handlers déclarés auprès du bus),
         │                             RoomQueryHandlersConfiguration (handlers de lecture déclarés auprès du QueryBus)
         └── adapters
             ├── in/rest
-            │   ├── api               Create/Update/Delete/Get/ListSites Api (mapping, validation, doc OpenAPI)
-            │   ├── controllers       Create/Update/Delete/Get/ListSites Action (une action = un endpoint)
-            │   ├── requests          CreateSiteRequest, UpdateSiteRequest (validation + toCommand)
+            │   ├── api               XxxApi par endpoint, sites et salles (mapping, validation, doc OpenAPI)
+            │   ├── controllers       XxxAction par endpoint, sites et salles (une action = un endpoint)
+            │   ├── requests          Create/UpdateSite, Create/UpdateRoom, ChangeRoomStatus Request (validation + toCommand)
             │   └── exceptions        RoomExceptionHandler (hérite du gestionnaire générique de shared)
             └── out/persistence
                 ├── models            SiteModel, MeetingRoomModel (entités JPA)
@@ -402,7 +402,7 @@ Démarche **TDD** : le test est toujours écrit avant le code.
 
 ### Organisation des tests E2E
 
-Les tests E2E sont dans `room/e2e/`, avec un fichier par endpoint (`CreateSiteE2ETest`, `UpdateSiteE2ETest`, `DeleteSiteE2ETest`, `GetSiteE2ETest`, `ListSitesE2ETest`). Ils portent `@E2ETest` (dans `shared/e2e`), qui regroupe :
+Les tests E2E sont dans `room/e2e/`, avec un fichier par endpoint (`XxxE2ETest`, un par endpoint de sites et de salles). Ils portent `@E2ETest` (dans `shared/e2e`), qui regroupe :
 - `@SpringBootTest` sur un port aléatoire ;
 - `RestTestClient` (Spring 7, construit sur `RestClient`, sans WebFlux) ;
 - le profil `test` ;

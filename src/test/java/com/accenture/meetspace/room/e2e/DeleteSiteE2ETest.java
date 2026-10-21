@@ -97,6 +97,26 @@ class DeleteSiteE2ETest {
     class Refuses {
 
         @Test
+        @DisplayName("a site that still has rooms")
+        void aSiteThatStillHasRooms() {
+            var id = existingSite();
+            client.post()
+                    .uri(SITES + "/{id}/rooms", id)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("code", "R101", "name", "Dodo", "floor", 1, "capacity", 8))
+                    .exchange()
+                    .expectStatus().isCreated();
+
+            delete(id)
+                    .expectStatus().isEqualTo(409)
+                    .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                    .expectBody()
+                    .jsonPath("$.title").isEqualTo("Business rule violated")
+                    .jsonPath("$.code").isEqualTo("SITE_HAS_ROOMS")
+                    .jsonPath("$.service").isEqualTo("room");
+        }
+
+        @Test
         @DisplayName("an unknown site")
         void anUnknownSite() {
             var unknown = UUID.randomUUID();
