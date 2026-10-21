@@ -1,6 +1,6 @@
 package com.accenture.meetspace.room.infrastructure.adapters.in.rest.controllers;
 
-import com.accenture.meetspace.room.application.usecases.create.CreateSiteResponse;
+import com.accenture.meetspace.room.application.usecases.command.create.CreateSiteResponse;
 import com.accenture.meetspace.room.infrastructure.adapters.in.rest.api.CreateSiteApi;
 import com.accenture.meetspace.room.infrastructure.adapters.in.rest.requests.CreateSiteRequest;
 import com.accenture.meetspace.shared.application.command.CommandBus;

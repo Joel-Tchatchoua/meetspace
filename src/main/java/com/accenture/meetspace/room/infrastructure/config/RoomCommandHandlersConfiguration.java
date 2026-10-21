@@ -1,15 +1,15 @@
 package com.accenture.meetspace.room.infrastructure.config;
 
 import com.accenture.meetspace.room.application.port.out.repository.SiteRepository;
-import com.accenture.meetspace.room.application.usecases.create.CreateSiteCommand;
-import com.accenture.meetspace.room.application.usecases.create.CreateSiteCommandHandler;
-import com.accenture.meetspace.room.application.usecases.create.CreateSiteResponse;
-import com.accenture.meetspace.room.application.usecases.delete.DeleteSiteCommand;
-import com.accenture.meetspace.room.application.usecases.delete.DeleteSiteCommandHandler;
-import com.accenture.meetspace.room.application.usecases.delete.DeleteSiteResponse;
-import com.accenture.meetspace.room.application.usecases.update.UpdateSiteCommand;
-import com.accenture.meetspace.room.application.usecases.update.UpdateSiteCommandHandler;
-import com.accenture.meetspace.room.application.usecases.update.UpdateSiteResponse;
+import com.accenture.meetspace.room.application.usecases.command.create.CreateSiteCommand;
+import com.accenture.meetspace.room.application.usecases.command.create.CreateSiteCommandHandler;
+import com.accenture.meetspace.room.application.usecases.command.create.CreateSiteResponse;
+import com.accenture.meetspace.room.application.usecases.command.delete.DeleteSiteCommand;
+import com.accenture.meetspace.room.application.usecases.command.delete.DeleteSiteCommandHandler;
+import com.accenture.meetspace.room.application.usecases.command.delete.DeleteSiteResponse;
+import com.accenture.meetspace.room.application.usecases.command.update.UpdateSiteCommand;
+import com.accenture.meetspace.room.application.usecases.command.update.UpdateSiteCommandHandler;
+import com.accenture.meetspace.room.application.usecases.command.update.UpdateSiteResponse;
 import com.accenture.meetspace.shared.application.command.CommandHandlerRegistration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

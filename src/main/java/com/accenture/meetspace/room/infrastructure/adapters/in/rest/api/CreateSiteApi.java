@@ -1,6 +1,6 @@
 package com.accenture.meetspace.room.infrastructure.adapters.in.rest.api;
 
-import com.accenture.meetspace.room.application.usecases.create.CreateSiteResponse;
+import com.accenture.meetspace.room.application.usecases.command.create.CreateSiteResponse;
 import com.accenture.meetspace.room.infrastructure.adapters.in.rest.requests.CreateSiteRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

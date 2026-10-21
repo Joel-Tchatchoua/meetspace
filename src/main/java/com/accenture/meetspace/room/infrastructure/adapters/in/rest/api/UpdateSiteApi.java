@@ -1,6 +1,6 @@
 package com.accenture.meetspace.room.infrastructure.adapters.in.rest.api;
 
-import com.accenture.meetspace.room.application.usecases.update.UpdateSiteResponse;
+import com.accenture.meetspace.room.application.usecases.command.update.UpdateSiteResponse;
 import com.accenture.meetspace.room.infrastructure.adapters.in.rest.requests.UpdateSiteRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

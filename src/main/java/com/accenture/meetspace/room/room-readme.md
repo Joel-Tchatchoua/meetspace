@@ -244,14 +244,16 @@ com.accenture.meetspace
     │   │   ├── create                CreateSite, CreateRoom
     │   │   ├── update                UpdateSite, UpdateRoom
     │   │   ├── changestatus          ChangeRoomStatus
-    │   │   └── delete                DeleteSite, DeleteRoom
+    │   │   ├── delete                DeleteSite, DeleteRoom
+    │   │   └── query                 SiteView, GetSiteQuery(+Handler), ListSitesQuery(+Handler)
     │   └── port/out/repository       SiteRepository
     └── infrastructure
-        ├── config                    RoomCommandHandlersConfiguration (handlers déclarés auprès du bus)
+        ├── config                    RoomCommandHandlersConfiguration (handlers déclarés auprès du bus),
+        │                             RoomQueryHandlersConfiguration (handlers de lecture déclarés auprès du QueryBus)
         └── adapters
             ├── in/rest
-            │   ├── api               CreateSiteApi, UpdateSiteApi, DeleteSiteApi (mapping, validation, doc OpenAPI)
-            │   ├── controllers       CreateSiteAction, UpdateSiteAction, DeleteSiteAction (une action = un endpoint)
+            │   ├── api               Create/Update/Delete/Get/ListSites Api (mapping, validation, doc OpenAPI)
+            │   ├── controllers       Create/Update/Delete/Get/ListSites Action (une action = un endpoint)
             │   ├── requests          CreateSiteRequest, UpdateSiteRequest (validation + toCommand)
             │   └── exceptions        RoomExceptionHandler (hérite du gestionnaire générique de shared)
             └── out/persistence
@@ -259,6 +261,28 @@ com.accenture.meetspace
                 ├── repositories      SpringDataSiteRepository (Spring Data), JpaSiteRepository (adaptateur)
                 └── mappers           SiteModelMapper (modèle JPA ↔ domaine)
 ```
+
+### Lecture (queries)
+
+- **Query bus.** Toutes les lectures passent par le `QueryBus`, sur le même modèle que le `CommandBus` :
+  - une query est un record qui implémente `Query<R>` (par exemple `GetSiteQuery`, `ListSitesQuery`) ;
+  - son handler implémente `QueryHandler<Q, R>` et est déclaré par un `QueryHandlerRegistration` dans `RoomQueryHandlersConfiguration` ;
+  - l'action appelle `queryBus.ask(query)`.
+
+  `QueryHandlerBus` (dans `shared/infrastructure/bus`) ouvre une **transaction en lecture seule** autour du handler. Les handlers n'ont donc pas de `@Transactional`.
+- **Transaction scripts en SQL direct.** Chaque handler de `application/usecases/query` utilise directement `NamedParameterJdbcTemplate`. Il n'y a ni port, ni domaine, ni JPA. C'est un écart assumé à l'hexagonale stricte : le côté lecture dépend de Spring JDBC.
+- **Soft delete écrit à la main.** Ces requêtes ne passent pas par Hibernate : chacune doit filtrer `deleted_at is null`.
+- **Modèles de lecture** : ce sont des records (`SiteView`), mappés depuis le `ResultSet`.
+- **Pagination globale et optionnelle** (dans `shared`) :
+  - **`Pagination(page, size, sort)`** est le **seul endroit** qui valide la page (≥ 0) et la taille (de 1 à 100). Elle est optionnelle : sans paramètres, on obtient `Pagination.DEFAULT`, soit page 0 et taille 20.
+  - **`PaginationArgumentResolver`** construit la `Pagination` de n'importe quelle action depuis `page`, `size` et `sort` (au format `propriété` ou `propriété,asc|desc`, répétable). Il refuse un nombre mal formé ou une direction inconnue, et n'utilise pas le `Pageable` de Spring Data.
+  - **`@PaginationParameters`** documente ces trois paramètres dans Swagger.
+  - **Une query paginée implémente `PaginatedQuery<R>`** : elle déclare ses colonnes triables (`sortableColumns`, de propriété vers colonne SQL) et son tri par défaut. Le bus refuse toute propriété de tri non déclarée, ce qui empêche toute injection SQL. `orderBy("id")` construit l'`ORDER BY`, avec `id` comme critère secondaire pour garder un ordre stable.
+  - **`PageResponse.of(content, pagination, total)`** produit exactement le format du cahier des charges, `{content, page: {size, number, totalElements, totalPages}}`.
+
+  Toute erreur de pagination lève `InvalidQueryException`, renvoyée en `400 INVALID_REQUEST` avec `errors`.
+- **Lecture d'une ressource absente** : la lecture d'un site réutilise l'exception du domaine `SiteNotFoundException`, donc `404 SITE_NOT_FOUND`.
+- **Tests** : les queries ne sont testées qu'en E2E, sans test unitaire ni d'intégration.
 
 ### Web
 
@@ -378,7 +402,7 @@ Démarche **TDD** : le test est toujours écrit avant le code.
 
 ### Organisation des tests E2E
 
-Les tests E2E sont dans `room/e2e/`, avec un fichier par endpoint (`CreateSiteE2ETest`, `UpdateSiteE2ETest`, `DeleteSiteE2ETest`). Ils portent `@E2ETest` (dans `shared/e2e`), qui regroupe :
+Les tests E2E sont dans `room/e2e/`, avec un fichier par endpoint (`CreateSiteE2ETest`, `UpdateSiteE2ETest`, `DeleteSiteE2ETest`, `GetSiteE2ETest`, `ListSitesE2ETest`). Ils portent `@E2ETest` (dans `shared/e2e`), qui regroupe :
 - `@SpringBootTest` sur un port aléatoire ;
 - `RestTestClient` (Spring 7, construit sur `RestClient`, sans WebFlux) ;
 - le profil `test` ;

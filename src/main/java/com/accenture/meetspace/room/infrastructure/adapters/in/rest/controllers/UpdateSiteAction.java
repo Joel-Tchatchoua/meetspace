@@ -1,6 +1,6 @@
 package com.accenture.meetspace.room.infrastructure.adapters.in.rest.controllers;
 
-import com.accenture.meetspace.room.application.usecases.update.UpdateSiteResponse;
+import com.accenture.meetspace.room.application.usecases.command.update.UpdateSiteResponse;
 import com.accenture.meetspace.room.infrastructure.adapters.in.rest.api.UpdateSiteApi;
 import com.accenture.meetspace.room.infrastructure.adapters.in.rest.requests.UpdateSiteRequest;
 import com.accenture.meetspace.shared.application.command.CommandBus;

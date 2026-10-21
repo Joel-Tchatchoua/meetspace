@@ -1,6 +1,6 @@
 package com.accenture.meetspace.room.infrastructure.adapters.in.rest.requests;
 
-import com.accenture.meetspace.room.application.usecases.create.CreateSiteCommand;
+import com.accenture.meetspace.room.application.usecases.command.create.CreateSiteCommand;
 import com.accenture.meetspace.room.domain.vo.SiteId;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

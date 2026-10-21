@@ -1,7 +1,7 @@
 package com.accenture.meetspace.room.infrastructure.adapters.in.rest.controllers;
 
-import com.accenture.meetspace.room.application.usecases.delete.DeleteSiteCommand;
-import com.accenture.meetspace.room.application.usecases.delete.DeleteSiteResponse;
+import com.accenture.meetspace.room.application.usecases.command.delete.DeleteSiteCommand;
+import com.accenture.meetspace.room.application.usecases.command.delete.DeleteSiteResponse;
 import com.accenture.meetspace.room.domain.vo.SiteId;
 import com.accenture.meetspace.room.infrastructure.adapters.in.rest.api.DeleteSiteApi;
 import com.accenture.meetspace.shared.application.command.CommandBus;

@@ -1,6 +1,6 @@
 package com.accenture.meetspace.room.infrastructure.adapters.in.rest.api;
 
-import com.accenture.meetspace.room.application.usecases.delete.DeleteSiteResponse;
+import com.accenture.meetspace.room.application.usecases.command.delete.DeleteSiteResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

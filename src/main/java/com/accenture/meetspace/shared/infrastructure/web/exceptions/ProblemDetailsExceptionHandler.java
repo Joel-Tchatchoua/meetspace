@@ -3,6 +3,7 @@ package com.accenture.meetspace.shared.infrastructure.web.exceptions;
 import com.accenture.meetspace.shared.application.command.ConcurrentUpdateException;
 import com.accenture.meetspace.shared.application.command.InvalidCommandException;
 import com.accenture.meetspace.shared.application.command.TransactionalException;
+import com.accenture.meetspace.shared.application.query.InvalidQueryException;
 import com.accenture.meetspace.shared.domain.BusinessRuleViolationException;
 import com.accenture.meetspace.shared.domain.DomainValidationException;
 import com.accenture.meetspace.shared.domain.NotFoundException;
@@ -37,6 +38,14 @@ public abstract class ProblemDetailsExceptionHandler extends ResponseEntityExcep
     @ExceptionHandler(InvalidCommandException.class)
     public ResponseEntity<ProblemDetail> handleInvalidCommand(InvalidCommandException exception,
                                                               HttpServletRequest request) {
+        var problem = invalidRequest(request.getRequestURI());
+        problem.setProperty("errors", List.of(new InvalidField(exception.field(), exception.reason())));
+        return respond(problem);
+    }
+
+    @ExceptionHandler(InvalidQueryException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidQuery(InvalidQueryException exception,
+                                                            HttpServletRequest request) {
         var problem = invalidRequest(request.getRequestURI());
         problem.setProperty("errors", List.of(new InvalidField(exception.field(), exception.reason())));
         return respond(problem);
