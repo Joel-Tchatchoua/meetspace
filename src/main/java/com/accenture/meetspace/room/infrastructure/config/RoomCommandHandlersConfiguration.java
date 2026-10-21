@@ -4,6 +4,9 @@ import com.accenture.meetspace.room.application.port.out.repository.SiteReposito
 import com.accenture.meetspace.room.application.usecases.create.CreateSiteCommand;
 import com.accenture.meetspace.room.application.usecases.create.CreateSiteCommandHandler;
 import com.accenture.meetspace.room.application.usecases.create.CreateSiteResponse;
+import com.accenture.meetspace.room.application.usecases.delete.DeleteSiteCommand;
+import com.accenture.meetspace.room.application.usecases.delete.DeleteSiteCommandHandler;
+import com.accenture.meetspace.room.application.usecases.delete.DeleteSiteResponse;
 import com.accenture.meetspace.room.application.usecases.update.UpdateSiteCommand;
 import com.accenture.meetspace.room.application.usecases.update.UpdateSiteCommandHandler;
 import com.accenture.meetspace.room.application.usecases.update.UpdateSiteResponse;
@@ -22,5 +25,10 @@ public class RoomCommandHandlersConfiguration {
     @Bean
     CommandHandlerRegistration<UpdateSiteCommand, UpdateSiteResponse> updateSite(SiteRepository siteRepository) {
         return new CommandHandlerRegistration<>(UpdateSiteCommand.class, new UpdateSiteCommandHandler(siteRepository));
+    }
+
+    @Bean
+    CommandHandlerRegistration<DeleteSiteCommand, DeleteSiteResponse> deleteSite(SiteRepository siteRepository) {
+        return new CommandHandlerRegistration<>(DeleteSiteCommand.class, new DeleteSiteCommandHandler(siteRepository));
     }
 }

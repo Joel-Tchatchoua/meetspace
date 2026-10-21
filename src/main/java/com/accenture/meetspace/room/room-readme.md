@@ -250,8 +250,8 @@ com.accenture.meetspace
         ├── config                    RoomCommandHandlersConfiguration (handlers déclarés auprès du bus)
         └── adapters
             ├── in/rest
-            │   ├── api               CreateSiteApi, UpdateSiteApi (mapping, validation, doc OpenAPI)
-            │   ├── controllers       CreateSiteAction, UpdateSiteAction (une action = un endpoint)
+            │   ├── api               CreateSiteApi, UpdateSiteApi, DeleteSiteApi (mapping, validation, doc OpenAPI)
+            │   ├── controllers       CreateSiteAction, UpdateSiteAction, DeleteSiteAction (une action = un endpoint)
             │   ├── requests          CreateSiteRequest, UpdateSiteRequest (validation + toCommand)
             │   └── exceptions        RoomExceptionHandler (hérite du gestionnaire générique de shared)
             └── out/persistence
@@ -274,7 +274,10 @@ com.accenture.meetspace
 - **Deux niveaux de validation :**
   - la requête (`XxxRequest`, avec Bean Validation) contrôle la forme des données : champs obligatoires, longueurs ;
   - la commande garde ses propres invariants, comme le fuseau horaire connu.
-- **Commande** : la requête la construit elle-même avec une méthode `toCommand()`, qui génère aussi l'identifiant (`SiteId.generate()`). Une création renvoie `201`, le record de réponse et un en-tête `Location`.
+- **Commande** : quand il y a un corps, la requête construit elle-même la commande avec `toCommand()`. En création, elle génère aussi l'identifiant (`SiteId.generate()`). En modification, on écrit `toCommand(id)`, avec l'id du chemin. Sans corps (`DELETE`), l'action construit directement la commande à partir de l'id du chemin.
+- **Statuts de succès** :
+  - une création renvoie `201`, le record de réponse et un en-tête `Location` ;
+  - une modification ou une suppression renvoie `200` avec le record de réponse (`updated: true`, `deleted: true`), plutôt que `204`.
 - **Erreurs** : tous les cas génériques sont dans `ProblemDetailsExceptionHandler`, une classe abstraite de `shared/infrastructure/web/exceptions` qui hérite de `ResponseEntityExceptionHandler`. `RoomExceptionHandler` est un `@RestControllerAdvice` limité au package `room` qui hérite de cette classe. Il ne fournit que le nom du service (`room`), et c'est là qu'on ajoutera un cas propre au module si besoin. Chaque erreur est un `application/problem+json` avec `title`, `status`, `detail`, `instance`, et les propriétés `code`, `service` (`room`) et `timestamp` (venant de la `Clock`).
 
   | Cas | Statut | `code` |
@@ -375,7 +378,7 @@ Démarche **TDD** : le test est toujours écrit avant le code.
 
 ### Organisation des tests E2E
 
-Les tests E2E sont dans `room/e2e/`, avec un fichier par endpoint (`CreateSiteE2ETest`, `UpdateSiteE2ETest`). Ils portent `@E2ETest` (dans `shared/e2e`), qui regroupe :
+Les tests E2E sont dans `room/e2e/`, avec un fichier par endpoint (`CreateSiteE2ETest`, `UpdateSiteE2ETest`, `DeleteSiteE2ETest`). Ils portent `@E2ETest` (dans `shared/e2e`), qui regroupe :
 - `@SpringBootTest` sur un port aléatoire ;
 - `RestTestClient` (Spring 7, construit sur `RestClient`, sans WebFlux) ;
 - le profil `test` ;
