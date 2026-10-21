@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Tag(name = "Sites", description = "Office sites hosting meeting rooms")
-@RequestMapping("/api/v1/sites")
+@RequestMapping("/api/{version}/sites")
 public interface CreateSiteApi {
 
     @Operation(
@@ -57,6 +57,7 @@ public interface CreateSiteApi {
             content = @Content(
                     mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                     schema = @Schema(implementation = ProblemDetail.class)))
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(version = "v1", consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<CreateSiteResponse> createSite(@Valid @RequestBody CreateSiteRequest request);
 }

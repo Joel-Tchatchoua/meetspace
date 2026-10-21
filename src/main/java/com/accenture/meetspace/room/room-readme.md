@@ -104,7 +104,7 @@ Enregistrement, propre au module, des créneaux où une salle est occupée.
 
 ## 4. API
 
-Base : `/api/v1`.
+Base : `/api/v1`. La version est gérée par le versioning natif de Spring 7 (voir la section Web).
 
 ### 4.1 Pagination
 
@@ -264,6 +264,13 @@ com.accenture.meetspace
 ### Web
 
 - **Une action par endpoint.** Il n'y a pas de contrôleur qui regroupe GET, POST, PUT… : chaque classe `XxxAction` fait une seule chose.
+- **Versioning d'API (Spring 7, par segment de chemin)** :
+  - `ApiVersioningConfiguration` (dans `shared/infrastructure/config`) lit la version dans le 2ᵉ segment du chemin, **uniquement pour `/api/**`**, pour ne pas gêner Swagger ni Actuator.
+  - Les mappings s'écrivent `@RequestMapping("/api/{version}/sites")` et `@PostMapping(version = "v1", …)`. On déclare `"v1"` plutôt que `"1"` pour que la doc OpenAPI affiche `/api/v1/…`.
+  - Le parser de versions ignore le préfixe `v` : `/api/1/sites` est donc aussi accepté.
+  - Une version non supportée renvoie `400` au format Problem Details.
+  - Une v2 ne demandera de dupliquer que les endpoints qui changent, avec `version = "v2"`.
+- **Erreurs avant le choix de l'action** : une version non supportée ou une route inconnue sont détectées avant que Spring choisisse une action, donc aucun gestionnaire de module ne s'applique. Elles sont traitées par `GlobalExceptionHandler` (dans `shared`, priorité la plus basse, `service` égal à `spring.application.name`). Les gestionnaires de module ont la priorité la plus haute, et `/error` est autorisé dans la sécurité.
 - **Une interface `XxxApi` par action.** Elle porte tout le mapping (`@RequestMapping`, `@PostMapping`, `@Valid @RequestBody`) et toute la documentation OpenAPI (`@Tag`, `@Operation`, `@ApiResponse`, exemples). L'action l'implémente et ne contient que le code : construire la commande, l'envoyer au `CommandBus`, renvoyer la réponse.
 - **Deux niveaux de validation :**
   - la requête (`XxxRequest`, avec Bean Validation) contrôle la forme des données : champs obligatoires, longueurs ;
@@ -359,7 +366,7 @@ Démarche **TDD** : le test est toujours écrit avant le code.
 |---|---|---|
 | Unitaire | Domaine et handlers | Stubs en mémoire des ports, aucun mock |
 | Intégration | Adaptateurs (JPA, RabbitMQ) | MySQL et RabbitMQ réels via Testcontainers |
-| E2E | Application complète par HTTP | `WebTestClient`, Testcontainers, JWT de test façon Keycloak |
+| E2E | Application complète par HTTP | `RestTestClient`, Testcontainers, JWT de test façon Keycloak |
 
 - `Clock` injectée pour contrôler le temps.
 - Tests organisés avec `@Nested` et `@DisplayName` ; chaque test vérifie le statut **et** le corps de la réponse.
@@ -370,11 +377,11 @@ Démarche **TDD** : le test est toujours écrit avant le code.
 
 Les tests E2E sont dans `room/e2e/`, avec un fichier par endpoint (`CreateSiteE2ETest`). Ils portent `@E2ETest` (dans `shared/e2e`), qui regroupe :
 - `@SpringBootTest` sur un port aléatoire ;
-- `WebTestClient` ;
+- `RestTestClient` (Spring 7, construit sur `RestClient`, sans WebFlux) ;
 - le profil `test` ;
 - le même nettoyage de la base avant chaque test.
 
-Chaque test vérifie le statut **et** le corps de la réponse, et contrôle la base quand l'API ne permet pas encore de relire la ressource.
+Chaque test vérifie le statut **et** le corps de la réponse, uniquement à travers l'API : jamais de requête JDBC. La persistance est déjà validée par les tests d'intégration. Les assertions JSON utilisent `jsonPath(...).value(Type.class, valeur -> assertThat(...))`, avec AssertJ et sans Hamcrest.
 
 ### Organisation des tests d'intégration
 

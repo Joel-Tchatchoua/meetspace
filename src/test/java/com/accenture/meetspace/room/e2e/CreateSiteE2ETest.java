@@ -7,15 +7,13 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.test.web.servlet.client.RestTestClient;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.endsWith;
 
 @E2ETest
 @DisplayName("POST /api/v1/sites")
@@ -24,10 +22,7 @@ class CreateSiteE2ETest {
     private static final String SITES = "/api/v1/sites";
 
     @Autowired
-    WebTestClient client;
-
-    @Autowired
-    JdbcTemplate jdbc;
+    RestTestClient client;
 
     private static Map<String, Object> ebene() {
         var body = new HashMap<String, Object>();
@@ -44,11 +39,11 @@ class CreateSiteE2ETest {
         return body;
     }
 
-    private WebTestClient.ResponseSpec create(Object body) {
+    private RestTestClient.ResponseSpec create(Object body) {
         return client.post()
                 .uri(SITES)
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(body)
+                .body(body)
                 .exchange();
     }
 
@@ -61,38 +56,29 @@ class CreateSiteE2ETest {
         void returning201ItsIdAndItsLocation() {
             var result = create(ebene())
                     .expectStatus().isCreated()
+                    .expectHeader().contentType(MediaType.APPLICATION_JSON)
                     .expectBody(CreateSiteResponse.class)
                     .returnResult();
 
             var response = result.getResponseBody();
             assertThat(response).isNotNull();
+            assertThat(response.siteId()).isNotNull();
             assertThat(response.created()).isTrue();
             assertThat(result.getResponseHeaders().getLocation())
                     .hasToString(result.getUrl() + "/" + response.siteId());
-            assertThat(jdbc.queryForMap("select code, name, address, time_zone from sites where id = ?",
-                    response.siteId().toString()))
-                    .containsEntry("code", "EBN")
-                    .containsEntry("name", "Ebène")
-                    .containsEntry("address", "Cybercity, Ebène")
-                    .containsEntry("time_zone", "Europe/Paris");
         }
 
         @Test
-        @DisplayName("with Indian/Mauritius as default time zone")
-        void withIndianMauritiusAsDefaultTimeZone() {
+        @DisplayName("accepting a site without time zone")
+        void acceptingASiteWithoutTimeZone() {
             var body = ebene();
             body.remove("timeZone");
 
-            var response = create(body)
+            create(body)
                     .expectStatus().isCreated()
-                    .expectBody(CreateSiteResponse.class)
-                    .returnResult()
-                    .getResponseBody();
-
-            assertThat(response).isNotNull();
-            assertThat(jdbc.queryForObject("select time_zone from sites where id = ?", String.class,
-                    response.siteId().toString()))
-                    .isEqualTo("Indian/Mauritius");
+                    .expectBody()
+                    .jsonPath("$.siteId").isNotEmpty()
+                    .jsonPath("$.created").isEqualTo(true);
         }
     }
 
@@ -113,7 +99,9 @@ class CreateSiteE2ETest {
                     .jsonPath("$.service").isEqualTo("room")
                     .jsonPath("$.timestamp").isNotEmpty()
                     .jsonPath("$.instance").isEqualTo(SITES)
-                    .jsonPath("$.errors[*].field").value(containsInAnyOrder("code", "name", "address"));
+                    .jsonPath("$.errors[*].field")
+                    .value(List.class, fields -> assertThat(fields)
+                            .containsExactlyInAnyOrder("code", "name", "address"));
         }
 
         @Test
@@ -135,22 +123,50 @@ class CreateSiteE2ETest {
                     .expectBody()
                     .jsonPath("$.code").isEqualTo("INVALID_REQUEST")
                     .jsonPath("$.errors[0].field").isEqualTo("timeZone")
-                    .jsonPath("$.errors[0].message").value(endsWith("Mars/Olympus"));
+                    .jsonPath("$.errors[0].message")
+                    .value(String.class, message -> assertThat(message).endsWith("Mars/Olympus"));
         }
 
         @Test
         @DisplayName("with a malformed body")
         void withAMalformedBody() {
-            client.post()
-                    .uri(SITES)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue("{ not json")
-                    .exchange()
+            create("{ not json")
                     .expectStatus().isBadRequest()
                     .expectBody()
                     .jsonPath("$.status").isEqualTo(400)
                     .jsonPath("$.code").isEqualTo("MALFORMED_REQUEST")
                     .jsonPath("$.service").isEqualTo("room");
+        }
+    }
+
+    @Nested
+    @DisplayName("checks the API version")
+    class ChecksTheApiVersion {
+
+        @Test
+        @DisplayName("rejecting an unsupported version")
+        void rejectingAnUnsupportedVersion() {
+            client.post()
+                    .uri("/api/v2/sites")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(ebene())
+                    .exchange()
+                    .expectStatus().isBadRequest()
+                    .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                    .expectBody()
+                    .jsonPath("$.status").isEqualTo(400)
+                    .jsonPath("$.detail").value(String.class, detail -> assertThat(detail).contains("2"));
+        }
+
+        @Test
+        @DisplayName("documenting the versioned path in the OpenAPI description")
+        void documentingTheVersionedPathInTheOpenApiDescription() {
+            client.get()
+                    .uri("/v3/api-docs")
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBody()
+                    .jsonPath("$.paths['/api/v1/sites'].post").exists();
         }
     }
 
