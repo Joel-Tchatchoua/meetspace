@@ -7,6 +7,7 @@ import com.accenture.meetspace.shared.domain.BusinessRuleViolationException;
 import com.accenture.meetspace.shared.domain.DomainValidationException;
 import com.accenture.meetspace.shared.domain.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -90,6 +91,15 @@ public abstract class ProblemDetailsExceptionHandler extends ResponseEntityExcep
         problem.setProperty("errors", exception.getBindingResult().getFieldErrors().stream()
                 .map(error -> new InvalidField(error.getField(), error.getDefaultMessage()))
                 .toList());
+        return handleExceptionInternal(exception, problem, headers, status, request);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleTypeMismatch(TypeMismatchException exception, HttpHeaders headers,
+                                                        HttpStatusCode status, WebRequest request) {
+        var problem = invalidRequest(path(request));
+        problem.setProperty("errors", List.of(new InvalidField(exception.getPropertyName(),
+                "has an invalid format: " + exception.getValue())));
         return handleExceptionInternal(exception, problem, headers, status, request);
     }
 

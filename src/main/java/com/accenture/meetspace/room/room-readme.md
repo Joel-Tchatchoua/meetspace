@@ -240,25 +240,24 @@ com.accenture.meetspace
     │   ├── enums             Amenity, RoomStatus
     │   └── exceptions        exceptions métier (SiteNotFoundException, InvalidCapacityException, …)
     ├── application
-    │   ├── command           découpé par intention métier (commande + handler)
-    │   │   ├── create        CreateSite, CreateRoom
-    │   │   ├── update        UpdateSite, UpdateRoom
-    │   │   ├── changestatus  ChangeRoomStatus
-    │   │   └── delete        DeleteSite, DeleteRoom
-    │   ├── query             à venir
-    │   └── port/out          SiteRepository
+    │   ├── usecases                  découpé par intention métier (commande + handler + réponse)
+    │   │   ├── create                CreateSite, CreateRoom
+    │   │   ├── update                UpdateSite, UpdateRoom
+    │   │   ├── changestatus          ChangeRoomStatus
+    │   │   └── delete                DeleteSite, DeleteRoom
+    │   └── port/out/repository       SiteRepository
     └── infrastructure
-        ├── config            RoomCommandHandlersConfiguration (handlers déclarés auprès du bus)
-        ├── persistence
-        │   ├── models        SiteModel, MeetingRoomModel (entités JPA)
-        │   ├── repositories  SpringDataSiteRepository (Spring Data)
-        │   ├── mappers       SiteModelMapper (modèle JPA ↔ domaine)
-        │   └── adapters/out  JpaSiteRepository (implémente SiteRepository)
-        └── web
-            ├── api           CreateSiteApi (mapping, validation et documentation OpenAPI)
-            ├── actions       CreateSiteAction (une action = un endpoint)
-            ├── requests      CreateSiteRequest (contraintes de validation)
-            └── exceptions    RoomExceptionHandler (hérite du gestionnaire générique de shared)
+        ├── config                    RoomCommandHandlersConfiguration (handlers déclarés auprès du bus)
+        └── adapters
+            ├── in/rest
+            │   ├── api               CreateSiteApi, UpdateSiteApi (mapping, validation, doc OpenAPI)
+            │   ├── controllers       CreateSiteAction, UpdateSiteAction (une action = un endpoint)
+            │   ├── requests          CreateSiteRequest, UpdateSiteRequest (validation + toCommand)
+            │   └── exceptions        RoomExceptionHandler (hérite du gestionnaire générique de shared)
+            └── out/persistence
+                ├── models            SiteModel, MeetingRoomModel (entités JPA)
+                ├── repositories      SpringDataSiteRepository (Spring Data), JpaSiteRepository (adaptateur)
+                └── mappers           SiteModelMapper (modèle JPA ↔ domaine)
 ```
 
 ### Web
@@ -282,6 +281,7 @@ com.accenture.meetspace
   |---|---|---|
   | Requête invalide (Bean Validation) | `400` | `INVALID_REQUEST`, avec `errors: [{field, message}]` |
   | Invariant de commande | `400` | `INVALID_REQUEST`, avec `errors: [{field, message}]` |
+  | Paramètre de chemin mal formé (id qui n'est pas un UUID) | `400` | `INVALID_REQUEST`, avec `errors: [{field, message}]` |
   | Corps illisible | `400` | `MALFORMED_REQUEST` |
   | Value object refusé | `400` | code de l'exception (ex. `INVALID_CAPACITY`) |
   | Introuvable | `404` | code de l'exception (ex. `SITE_NOT_FOUND`) |
@@ -375,7 +375,7 @@ Démarche **TDD** : le test est toujours écrit avant le code.
 
 ### Organisation des tests E2E
 
-Les tests E2E sont dans `room/e2e/`, avec un fichier par endpoint (`CreateSiteE2ETest`). Ils portent `@E2ETest` (dans `shared/e2e`), qui regroupe :
+Les tests E2E sont dans `room/e2e/`, avec un fichier par endpoint (`CreateSiteE2ETest`, `UpdateSiteE2ETest`). Ils portent `@E2ETest` (dans `shared/e2e`), qui regroupe :
 - `@SpringBootTest` sur un port aléatoire ;
 - `RestTestClient` (Spring 7, construit sur `RestClient`, sans WebFlux) ;
 - le profil `test` ;
