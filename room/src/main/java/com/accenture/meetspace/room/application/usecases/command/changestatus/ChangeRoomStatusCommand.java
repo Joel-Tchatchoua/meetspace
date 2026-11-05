@@ -1,0 +1,16 @@
+package com.accenture.meetspace.room.application.usecases.command.changestatus;
+
+import com.accenture.meetspace.room.domain.enums.RoomStatus;
+import com.accenture.meetspace.room.domain.vo.RoomId;
+import com.accenture.meetspace.bootstrap.application.command.Command;
+
+import static com.accenture.meetspace.bootstrap.application.command.CommandPreconditions.requireNonNull;
+
+public record ChangeRoomStatusCommand(RoomId roomId, RoomStatus status)
+        implements Command<ChangeRoomStatusResponse> {
+
+    public ChangeRoomStatusCommand {
+        requireNonNull(roomId, "roomId");
+        requireNonNull(status, "status");
+    }
+}
