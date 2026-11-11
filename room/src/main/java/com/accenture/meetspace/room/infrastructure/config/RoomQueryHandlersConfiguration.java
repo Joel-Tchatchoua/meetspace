@@ -1,15 +1,15 @@
 package com.accenture.meetspace.room.infrastructure.config;
 
-import com.accenture.meetspace.room.application.usecases.query.GetRoomQuery;
-import com.accenture.meetspace.room.application.usecases.query.GetRoomQueryHandler;
-import com.accenture.meetspace.room.application.usecases.query.GetSiteQuery;
-import com.accenture.meetspace.room.application.usecases.query.GetSiteQueryHandler;
-import com.accenture.meetspace.room.application.usecases.query.ListRoomsQuery;
-import com.accenture.meetspace.room.application.usecases.query.ListRoomsQueryHandler;
-import com.accenture.meetspace.room.application.usecases.query.ListSitesQuery;
-import com.accenture.meetspace.room.application.usecases.query.ListSitesQueryHandler;
-import com.accenture.meetspace.room.application.usecases.query.RoomView;
-import com.accenture.meetspace.room.application.usecases.query.SiteView;
+import com.accenture.meetspace.room.application.usecases.query.room.GetRoomQuery;
+import com.accenture.meetspace.room.application.usecases.query.room.GetRoomQueryHandler;
+import com.accenture.meetspace.room.application.usecases.query.site.GetSiteQuery;
+import com.accenture.meetspace.room.application.usecases.query.site.GetSiteQueryHandler;
+import com.accenture.meetspace.room.application.usecases.query.room.ListRoomsQuery;
+import com.accenture.meetspace.room.application.usecases.query.room.ListRoomsQueryHandler;
+import com.accenture.meetspace.room.application.usecases.query.site.ListSitesQuery;
+import com.accenture.meetspace.room.application.usecases.query.site.ListSitesQueryHandler;
+import com.accenture.meetspace.room.application.usecases.query.room.RoomView;
+import com.accenture.meetspace.room.application.usecases.query.site.SiteView;
 import com.accenture.meetspace.bootstrap.application.query.PageResponse;
 import com.accenture.meetspace.bootstrap.application.query.QueryHandlerRegistration;
 import org.springframework.context.annotation.Bean;

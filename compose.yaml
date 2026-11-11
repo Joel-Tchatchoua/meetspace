@@ -15,5 +15,26 @@ services:
       timeout: 5s
       retries: 5
 
+  keycloak:
+    image: 'quay.io/keycloak/keycloak:26.4'
+    container_name: meetspace-keycloak
+    restart: unless-stopped
+    command: ['start-dev', '--import-realm']
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: '${KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME}'
+      KC_BOOTSTRAP_ADMIN_PASSWORD: '${KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD}'
+      KEYCLOAK_REALM: '${KEYCLOAK_REALM}'
+      KEYCLOAK_CLIENT_ID: '${KEYCLOAK_CLIENT_ID}'
+      KEYCLOAK_CLIENT_SECRET: '${KEYCLOAK_CLIENT_SECRET}'
+      MEETSPACE_ADMIN_USERNAME: '${MEETSPACE_ADMIN_USERNAME}'
+      MEETSPACE_ADMIN_EMAIL: '${MEETSPACE_ADMIN_EMAIL}'
+      MEETSPACE_ADMIN_PASSWORD: '${MEETSPACE_ADMIN_PASSWORD}'
+    ports:
+      - '${KEYCLOAK_PORT:-8180}:8080'
+    volumes:
+      - ./keycloak/realm:/opt/keycloak/data/import:ro,Z
+      - keycloak-data:/opt/keycloak/data
+
 volumes:
   mysql-data:
+  keycloak-data:

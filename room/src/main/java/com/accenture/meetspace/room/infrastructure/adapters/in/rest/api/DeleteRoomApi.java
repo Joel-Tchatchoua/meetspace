@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,6 +49,7 @@ public interface DeleteRoomApi {
             content = @Content(
                     mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                     schema = @Schema(implementation = ProblemDetail.class)))
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping(path = "/{id}", version = "v1", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<DeleteRoomResponse> deleteRoom(
             @Parameter(description = "Id of the room", example = "7b1e2c4d-9a3f-4e8b-b6d2-1c5f8a9e0d34")

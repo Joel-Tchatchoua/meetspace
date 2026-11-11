@@ -1,0 +1,46 @@
+{
+  "realm": "${KEYCLOAK_REALM}",
+  "enabled": true,
+  "registrationAllowed": false,
+  "roles": {
+    "realm": [
+      { "name": "ADMIN", "description": "Administrators" },
+      { "name": "EMPLOYEE", "description": "Employees" },
+      { "name": "SERVICE", "description": "Calls between services" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "${KEYCLOAK_CLIENT_ID}",
+      "secret": "${KEYCLOAK_CLIENT_SECRET}",
+      "enabled": true,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true
+    }
+  ],
+  "users": [
+    {
+      "username": "service-account-${KEYCLOAK_CLIENT_ID}",
+      "enabled": true,
+      "serviceAccountClientId": "${KEYCLOAK_CLIENT_ID}",
+      "realmRoles": ["SERVICE"],
+      "clientRoles": {
+        "realm-management": ["manage-users", "view-users", "query-users", "view-realm"]
+      }
+    },
+    {
+      "username": "${MEETSPACE_ADMIN_USERNAME}",
+      "email": "${MEETSPACE_ADMIN_EMAIL}",
+      "firstName": "MeetSpace",
+      "lastName": "Admin",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": ["ADMIN"],
+      "credentials": [
+        { "type": "password", "value": "${MEETSPACE_ADMIN_PASSWORD}", "temporary": false }
+      ]
+    }
+  ]
+}

@@ -2,7 +2,6 @@ package com.accenture.meetspace.room.e2e;
 
 import com.accenture.meetspace.room.application.usecases.command.create.CreateRoomResponse;
 import com.accenture.meetspace.room.application.usecases.command.create.CreateSiteResponse;
-import com.accenture.meetspace.bootstrap.test.e2e.E2ETest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -18,7 +17,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@E2ETest
+@RoomE2ETest
 @DisplayName("POST /api/v1/sites/{siteId}/rooms")
 class CreateRoomE2ETest {
 

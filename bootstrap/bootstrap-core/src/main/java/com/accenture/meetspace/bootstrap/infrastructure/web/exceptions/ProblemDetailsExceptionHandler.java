@@ -15,6 +15,9 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.ServletWebRequest;
@@ -83,6 +86,17 @@ public abstract class ProblemDetailsExceptionHandler extends ResponseEntityExcep
         logger.error("Technical failure on " + request.getRequestURI(), exception);
         return respond(problem(HttpStatus.INTERNAL_SERVER_ERROR, "Technical error", "TECHNICAL_ERROR",
                 "The request could not be completed", request.getRequestURI()));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ProblemDetail> handleAccessDenied(HttpServletRequest request) {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
+            return respond(problem(HttpStatus.UNAUTHORIZED, "Authentication required", "UNAUTHENTICATED",
+                    "A valid token is required", request.getRequestURI()));
+        }
+        return respond(problem(HttpStatus.FORBIDDEN, "Access denied", "ACCESS_DENIED",
+                "You do not have the required role", request.getRequestURI()));
     }
 
     @ExceptionHandler(Exception.class)

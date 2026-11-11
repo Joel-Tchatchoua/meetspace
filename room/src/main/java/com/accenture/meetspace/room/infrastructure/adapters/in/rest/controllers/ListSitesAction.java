@@ -1,7 +1,7 @@
 package com.accenture.meetspace.room.infrastructure.adapters.in.rest.controllers;
 
-import com.accenture.meetspace.room.application.usecases.query.ListSitesQuery;
-import com.accenture.meetspace.room.application.usecases.query.SiteView;
+import com.accenture.meetspace.room.application.usecases.query.site.ListSitesQuery;
+import com.accenture.meetspace.room.application.usecases.query.site.SiteView;
 import com.accenture.meetspace.room.infrastructure.adapters.in.rest.api.ListSitesApi;
 import com.accenture.meetspace.bootstrap.application.query.PageResponse;
 import com.accenture.meetspace.bootstrap.application.query.Pagination;

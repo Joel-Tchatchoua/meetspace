@@ -100,7 +100,7 @@ Enregistrement, propre au module, des créneaux où une salle est occupée.
 - Contrôle par endpoint avec `@PreAuthorize`.
 - Seuls les endpoints de health sont publics ; tous les autres exigent un token valide.
 
-> **État actuel : sécurité provisoirement ouverte.** `SecurityConfiguration` (dans `bootstrap/infrastructure/config`) est stateless, sans CSRF, et laisse `/api/**` en `permitAll`. Les endpoints d'administration sont donc accessibles sans token jusqu'à l'étape dédiée à la sécurité (resource server JWT Keycloak, `@PreAuthorize`, JWT de test).
+> **Sécurité.** Tout endpoint exige un token Keycloak valide (`401 UNAUTHENTICATED` sinon, émis par la chaîne de sécurité avec le service `meetspace`). La lecture des sites et des salles est ouverte à tout utilisateur connecté, y compris le rôle `SERVICE`. Toute écriture exige `ADMIN` (`@PreAuthorize`, sinon `403 ACCESS_DENIED`). Dans le monolithe, `AuthenticatedUserFilter` du module `user` bloque aussi les comptes désactivés ou sans profil (`403`).
 
 ## 4. API
 
@@ -245,7 +245,9 @@ com.accenture.meetspace
     │   │   ├── update                UpdateSite, UpdateRoom
     │   │   ├── changestatus          ChangeRoomStatus
     │   │   ├── delete                DeleteSite, DeleteRoom
-    │   │   └── query                 SiteView, RoomView, Get/ListSites et Get/ListRooms Query(+Handler)
+    │   │   └── query                 lectures groupées par contexte
+    │   │       ├── site          GetSite, ListSites, SiteView
+    │   │       └── room          GetRoom, ListRooms, RoomView
     │   └── port/out/repository       SiteRepository
     └── infrastructure
         ├── config                    RoomCommandHandlersConfiguration (handlers déclarés auprès du bus),

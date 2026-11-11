@@ -1,7 +1,7 @@
 package com.accenture.meetspace.room.infrastructure.adapters.in.rest.controllers;
 
-import com.accenture.meetspace.room.application.usecases.query.ListRoomsQuery;
-import com.accenture.meetspace.room.application.usecases.query.RoomView;
+import com.accenture.meetspace.room.application.usecases.query.room.ListRoomsQuery;
+import com.accenture.meetspace.room.application.usecases.query.room.RoomView;
 import com.accenture.meetspace.room.domain.enums.Amenity;
 import com.accenture.meetspace.room.domain.enums.RoomStatus;
 import com.accenture.meetspace.room.infrastructure.adapters.in.rest.api.ListRoomsApi;

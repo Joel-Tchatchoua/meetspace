@@ -1,7 +1,7 @@
 package com.accenture.meetspace.room.infrastructure.adapters.in.rest.controllers;
 
-import com.accenture.meetspace.room.application.usecases.query.GetSiteQuery;
-import com.accenture.meetspace.room.application.usecases.query.SiteView;
+import com.accenture.meetspace.room.application.usecases.query.site.GetSiteQuery;
+import com.accenture.meetspace.room.application.usecases.query.site.SiteView;
 import com.accenture.meetspace.room.infrastructure.adapters.in.rest.api.GetSiteApi;
 import com.accenture.meetspace.bootstrap.application.query.QueryBus;
 import org.springframework.http.ResponseEntity;

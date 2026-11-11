@@ -1,6 +1,5 @@
 package com.accenture.meetspace.room.e2e;
 
-import com.accenture.meetspace.bootstrap.test.e2e.E2ETest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -15,7 +14,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@E2ETest
+@RoomE2ETest
 @DisplayName("GET /api/v1/sites")
 class ListSitesE2ETest {
 
